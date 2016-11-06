@@ -10,16 +10,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import rdfbones.lib.ArrayLib;
-import rdfbones.lib.GraphLib;
 import rdfbones.lib.QueryLib;
 import rdfbones.lib.SPARQLDataGetter;
+import rdfbones.lib.SPARQLUtils;
 import rdfbones.lib.SubSPARQLDataGetter;
 import rdfbones.rdfdataset.FormData;
 import rdfbones.rdfdataset.Graph;
-import rdfbones.rdfdataset.InputNode;
-import rdfbones.rdfdataset.LiteralTriple;
 import rdfbones.rdfdataset.RestrictionTriple;
-import rdfbones.rdfdataset.SelectNode;
 import rdfbones.rdfdataset.Triple;
 import vivoclasses.QueryUtils;
 import vivoclasses.VitroRequest;
@@ -46,17 +43,14 @@ public class RDFDataConnector {
   }
   
   void initFormDataRetrieval(){
-
+    
     //URIs to select
     String selectVars = new String();
     for(String var : this.graph.dataResources){
       selectVars += " ?" + var;
-    }
-    //Types
-    for(String var : selectUris){
       selectVars += " ?" + var + "Type";
     }
-    
+    //Types
     for(String var : this.graph.dataLiterals){
       selectVars += " ?" + var;
     }
@@ -101,7 +95,7 @@ public class RDFDataConnector {
     JSONArray resultArray = new JSONArray();
     for(Map<String, String> result : results){
       JSONObject jsonObject = new JSONObject();
-      for(String uri : this.selectUris){
+      for(String uri : this.graph.dataResources){
         jsonObject.put(uri, getInstanceObject(result, uri));
       }
       for(String literal : this.selectLiterals){
@@ -112,7 +106,6 @@ public class RDFDataConnector {
     return resultArray;
   }
   
-
   static JSONObject getInstanceObject(Map<String, String> result, String varName) throws JSONException{
     
     JSONObject jsonObject = new JSONObject();
@@ -131,46 +124,41 @@ public class RDFDataConnector {
   List<Triple> dataTriples = new ArrayList<Triple>();
   String typeQuery = new String();
   List<String> typeQueryInputs = new ArrayList<String>();
-  List<String> typesToSelect = new ArrayList<String>();
   boolean typeQueryFlag = false;
   
   void initFormDataInput(){
     
     
-    //By restriction triple everything is selected
-    /*
-    if(triple instanceof RestrictionTriple){
-      this.selectUris.add(triple.subject.varName);
-      this.selectUris.add(triple.object.varName);
-    }
-    */
-    
-    List<Triple> triplesForQuery = new ArrayList<Triple>();
+    List<Triple> typeQueryTriples = new ArrayList<Triple>();
+    List<String> typesToSelect = new ArrayList<String>();
+
     //We are working with the restrictionTriples of the graph
-    
     //this.typesToSelect = GraphLib.getNewInstanceNodes(this.graph.triples);
-    
-    if(this.typesToSelect.size() > 0){
-      for(Triple triple : this.graph.restrictionTriples){
-        if(triple instanceof RestrictionTriple){
-          ((RestrictionTriple) triple).increment();
-        }
-        if(triple.predicate.equals("rdf:type")){
-          if(this.formData.input.equals(triple.subject.varName) || 
-               this.formData.inputs.contains(triple.subject.varName)){
-            triplesForQuery.add(triple);
-            ArrayLib.addDistinct(this.typesToSelect, triple.object.varName);
-          }
-        } else {
-          triplesForQuery.add(triple);
-          ArrayLib.addDistinct(this.typesToSelect, triple.subject.varName);
-          ArrayLib.addDistinct(this.typesToSelect, triple.object.varName);
-        }
+
+    for(Triple triple : this.graph.restrictionTriples){
+      if(triple instanceof RestrictionTriple){
+        ((RestrictionTriple) triple).increment();
       }
-      //Assemble query
-      
+      if(triple.predicate.equals("rdf:type")){
+        if(this.formData.input.equals(triple.subject.varName) || 
+             this.formData.inputs.contains(triple.subject.varName)){
+          typeQueryTriples.add(triple);
+          ArrayLib.addDistinct(typesToSelect, triple.object.varName);
+        }
+      } else {
+        typeQueryTriples.add(triple);
+        ArrayLib.addDistinct(typesToSelect, triple.subject.varName);
+        ArrayLib.addDistinct(typesToSelect, triple.object.varName);
+      }
+    }
+    if(typesToSelect.size() > 0){
+      //There is something to query regarding the types
       this.typeQueryFlag = true;
-    } 
+      this.typeRetriever = new SubSPARQLDataGetter(this.vreq,
+          SPARQLUtils.assembleQueryTriples(typeQueryTriples),
+          SPARQLUtils.assembleSelectVars(typesToSelect),
+          typesToSelect, null, this.formData.input);
+    }
   }
   
   //Called initially
@@ -217,14 +205,18 @@ public class RDFDataConnector {
   
   void setTypeMap(JSONObject obj, VitroRequest vreq, Map<String, String> variableMap) throws JSONException{
 
-    for(String typeQueryInput : this.typeQueryInputs){
+    String value;
+    if(this.typeQueryFlag){
       if(this.formData.input.equals(typeQueryInput)){
-        variableMap.put(typeQueryInput, obj.getString("uri"));
+        variableMap.putAll(this.typeRetriever.getData().get(0));
+        variableMap.put(typeQueryInput, );
+        value = obj.getString("uri");
       } else {
-        variableMap.put(typeQueryInput, obj.getJSONObject(typeQueryInput).getString("uri"));
+        value = obj.getJSONObject(typeQueryInput).getString("uri"));
       }
     }
-    //Have to be revised
+    //Have to be revised#
+      
     this.typeQuery = QueryUtils.subUrisForQueryVars(this.typeQuery, variableMap);
     variableMap.putAll(QueryUtils.getResult(this.typeQuery, this.typesToSelect, null, vreq).get(0));
   }

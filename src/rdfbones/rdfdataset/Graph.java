@@ -11,6 +11,7 @@ import org.json.JSONObject;
 
 import rdfbones.formConfiguration.RDFDataConnector;
 import rdfbones.formconfig.GraphProcessor;
+import rdfbones.lib.ArrayLib;
 import rdfbones.lib.GraphLib;
 import vivoclasses.VitroRequest;
 
@@ -30,7 +31,7 @@ public class Graph {
  
   public List<String> dataResources;
   public List<String> dataLiterals;
-  
+  public List<String> classNodes;
   
   public Graph(List<Triple> triples){
     
@@ -43,21 +44,20 @@ public class Graph {
     // TODO Auto-generated constructor stub
   }
   
-  public void init(VitroRequest vreq, FormData formData) throws JSONException{
-   
+  
+  public void initNodes(){
     this.dataResources = GraphLib.getNewInstanceNodes(this.dataTriples);
     this.dataLiterals = GraphLib.getLiteralNodes(this.dataTriples);
     this.inputNodes = GraphLib.getInputNodes(this.dataTriples);
-    
+    this.classNodes = GraphLib.getClassNodes(this.restrictionTriples);
+  }
+  
+  public void init(VitroRequest vreq, FormData formData) throws JSONException{
+   
+
     this.formData = formData;
-    this.rdfDataConnector = new RDFDataConnector(this, vreq);
-    if(vreq.getParameterMap().containsKey("objectUri")){ 
-      //The existing data has to be queried
-      this.existingData = rdfDataConnector.getExistingData();
-    }
-    
-    
-    //Form Data Initialisation
+  
+    //Subgraph initialisation
     for(String subGraphKey : this.subGraphs.keySet()){
       Graph subGraph = this.subGraphs.get(subGraphKey);
       if(formData.subFormData.keySet().contains(subGraphKey)){
@@ -67,35 +67,37 @@ public class Graph {
         
       }
     }
-  }
-  
-  JSONArray getGraphData(VitroRequest vreq) throws JSONException {
     
-    //This is the initial graph where only the VitroRequest inputs are used
-    this.results = this.rdfDataConnector.getResult(vreq);
-    this.setSubGraphData(vreq);
-    return this.results;
+    this.rdfDataConnector = new RDFDataConnector(this, vreq);
+    //This runs only at the main graph
+    if(this.startNode.equals("")){
+      if(vreq.getParameterMap().containsKey("objectUri")){ 
+        //The existing data has to be queried
+        this.existingData = rdfDataConnector.getExistingData();
+        this.setSubGraphData();
+      }  
+    }
   }
   
-  JSONArray getGraphData(VitroRequest vreq, String initialValue, String key) throws JSONException{
+  JSONArray getGraphData(String value) throws JSONException{
   
     //Here the parent graph input is used as well
-    this.results = this.rdfDataConnector.getData(vreq, initialValue, key);
-    this.setSubGraphData(vreq);
-    return this.results;
+    this.existingData = this.rdfDataConnector.getExistingData(value);
+    this.setSubGraphData();
+    return this.existingData;
   }
   
-  private void setSubGraphData(VitroRequest vreq){
+  private void setSubGraphData(){
     
     for(String key : this.subGraphs.keySet()){
       Graph subGraph = this.subGraphs.get(key);
-      for(int i = 0; i < this.results.length(); i++){
+      for(int i = 0; i < this.existingData.length(); i++){
         try {
           //Convert result object to array of the subgraph data
-          JSONObject object = results.getJSONObject(i).getJSONObject(key);
+          JSONObject object = this.existingData.getJSONObject(i).getJSONObject(key);
           String initialValue = object.getString("uri");
           String subGraphKey = GraphLib.getObject(subGraph.multiTriple, key);
-          object.put(subGraphKey, subGraph.getGraphData(vreq, initialValue, subGraphKey));
+          object.put(subGraphKey, subGraph.getGraphData(initialValue));
         } catch (JSONException e) {
           e.printStackTrace();
         }
@@ -103,27 +105,25 @@ public class Graph {
     }
   }
   
-  public String getReplacedQuery(List<String> variable, int cnt, String query){
-    for(String var : variable){
-      //Remove @ character
-      var = "?" + var;
-      query = query.replaceAll("\\" + var, var + Integer.toString(cnt)); 
-    }
-    return query;
-  }
-  
   public void debug(int n){
     
     String tab = new String(new char[n]).replace("\0", "\t");
-    System.out.println(tab + "Triples : ");
+    System.out.println(tab + "Data triples : ");
     for(Triple triple : this.dataTriples){
       System.out.println(tab + triple.subject.varName + "   " + triple.predicate + "   " + triple.object.varName);
     }
+    System.out.println(tab + "Restriction triples : ");
+    for(Triple triple : this.restrictionTriples){
+      System.out.println(tab + triple.subject.varName + "   " + triple.predicate + "   " + triple.object.varName);
+    }
+    System.out.println(tab + "ClassNodes : " + ArrayLib.debugList(this.classNodes));
+    System.out.println(tab + "DataResources : " + ArrayLib.debugList(this.dataResources));
+
     int k = n + 1;
     System.out.println(tab + "Subgraphs :  " + subGraphs.keySet().size());
     if(subGraphs.keySet().size() > 0){
       for(String key : subGraphs.keySet()){
-        System.out.println(". Key : " + key);
+        System.out.println(tab + " Key : " + key);
         subGraphs.get(key).debug(k);
       }  
     } 

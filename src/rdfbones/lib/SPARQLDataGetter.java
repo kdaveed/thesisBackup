@@ -20,7 +20,7 @@ public class SPARQLDataGetter {
   
   public SPARQLDataGetter(VitroRequest vreq, String selectVars, 
     String queryTriples, List<String> uris, List<String> literals){
-     
+    
     this.vreq = vreq;
     this.selectVars = selectVars;
     this.queryTriples = queryTriples;

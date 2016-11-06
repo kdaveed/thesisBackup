@@ -9,4 +9,13 @@ public class ArrayLib {
       list.add(object);
     }
   }
+  
+  public static String debugList(List<String> list){
+    
+    String arr = new String();
+    for(String str : list){
+      arr += str + " ";
+    }
+    return arr;
+  }
 }

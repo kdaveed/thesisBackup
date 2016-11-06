@@ -19,12 +19,8 @@ public class GraphLib {
     
     List<String> nodes = new ArrayList<String>();
     for(Triple triple : triples){
-      if(! nodes.contains(triple.subject.varName)){
-        nodes.add(triple.subject.varName);
-      }
-      if(! nodes.contains(triple.object.varName)){
-        nodes.add(triple.object.varName);
-      }
+      ArrayLib.addDistinct(nodes, triple.subject.varName);
+      ArrayLib.addDistinct(nodes, triple.object.varName);
     }
     return nodes; 
   }
@@ -45,6 +41,72 @@ public class GraphLib {
     } else {
       return triple.subject.varName;
     }
+  }
+  
+  public static List<String> getObjectNodes(List<Triple> triples){
+   
+    List<String> object = new ArrayList<String>();
+    for(Triple triple : triples){
+      object.add(triple.object.varName);
+    }
+    return object;
+  }
+  
+  public static List<Triple> getAndRemoveTypeTriples(List<Triple> triples, List<String> nodes){
+    
+    List<Triple> toReturn = new ArrayList<Triple>();
+    List<Integer> nums = getTypeNums(triples, nodes);
+    set(toReturn, triples, nums);
+    remove(triples, nums);
+    return toReturn;
+  }
+  
+  public static List<Triple> getAndRemoveSubClassTriples(List<Triple> triples, List<String> nodes){
+    
+    List<Triple> toReturn = new ArrayList<Triple>();
+    List<Integer> nums = getSubClassNums(triples, nodes);
+    set(toReturn, triples, getTypeNums(triples, nodes));
+    remove(triples, nums);
+    return toReturn;
+  }
+  
+  public static void set(List<Triple> triplesToSet, List<Triple> triples, List<Integer> integers){
+    
+    for(Integer i : integers){
+      triplesToSet.add(triples.get(i));
+    }
+  }
+  
+  public static void remove(List<Triple> triples, List<Integer> integers){
+    
+    for(int j = integers.size(); j > 0; j--){
+      triples.remove(integers.get(j-1).intValue());
+    }
+  }
+ 
+  public static List<Integer> getTypeNums(List<Triple> triples, List<String> nodes){
+ 
+    return getTripleNums(triples, nodes, "rdf:type");
+  }
+  
+  public static List<Integer> getSubClassNums(List<Triple> triples, List<String> nodes){
+    
+    return getTripleNums(triples, nodes, "rdfs:subClassOf");
+  }
+  
+  public static List<Integer> getTripleNums(List<Triple> triples, List<String> nodes, String predicate){
+  
+    List<Integer> typeNums = new ArrayList<Integer>();
+    Integer i = 0;
+    for(Triple triple : triples){
+      if(nodes.contains(triple.subject.varName) && triple.predicate.equals(predicate)){
+        typeNums.add(i);
+      }
+      i++;
+    }
+    
+    
+    return typeNums;
   }
   
   public static List<Triple> getTypeTriples(List<Triple> triples, List<String> nodes){
@@ -74,7 +136,7 @@ public class GraphLib {
     return null;
   }
   
-  public static List<Triple> getRestrictionTriple(List<String> nodes, List<Triple> triples){
+  public static List<Triple> getRestrictionTriples(List<String> nodes, List<Triple> triples){
     
     List<Triple> addTo = new ArrayList<Triple>();
     for(Triple triple : triples){
@@ -83,6 +145,22 @@ public class GraphLib {
       }
     }
     return addTo;
+  }
+  
+  public static List<Triple> getAndRemoveRestrictionTriples(List<String> nodes, List<Triple> triples){
+    
+    List<Integer> nums = new ArrayList<Integer>();
+    Integer i = 0;
+    for(Triple triple : triples){
+      if(nodes.contains(triple.subject.varName) && nodes.contains(triple.object.varName)){
+         nums.add(i);
+      }
+      i++;
+    }
+    List<Triple> toReturn = new ArrayList<Triple>();
+    set(toReturn, triples, nums);
+    remove(triples, nums);
+    return toReturn;
   }
   
   public static List<String> getNewInstanceNodes(List<Triple> triples){
@@ -135,4 +213,17 @@ public class GraphLib {
     }
     return inputNodes;
   }  
+  
+  public static List<String> getClassNodes(List<Triple> restrictionTriples){
+    
+    List<String> classNodes = new ArrayList<String>();
+    for(Triple triple : restrictionTriples){
+      if(triple instanceof RestrictionTriple){
+        ArrayLib.addDistinct(classNodes, triple.subject.varName);
+        ArrayLib.addDistinct(classNodes, triple.object.varName);
+      }
+    }
+    return classNodes;
+  }
+  
 }
