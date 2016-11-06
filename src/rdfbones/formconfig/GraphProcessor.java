@@ -43,7 +43,6 @@ public class GraphProcessor {
   
   public static Graph getSubGraph(List<Triple> triples, List<Triple> restrictionTriples, String startNode, List<Triple> graphTriples){
     
-    
     String initialNode = new String(startNode);
     Graph graph = new Graph();
     if(graphTriples.size() > 0){
@@ -102,7 +101,8 @@ public class GraphProcessor {
      * Now the algorithm does not remove the found restriction triples
      * it works but due to efficiency it has to implemented later.
      */
-    List<Triple> restTriples = new ArrayList<Triple>();
+    
+List<Triple> restTriples = new ArrayList<Triple>();
     List<String> nodes = GraphLib.getNodes(graphTriples);
     //Get type triples
     restTriples.addAll(GraphLib.getAndRemoveTypeTriples(restrictionTriples, nodes));

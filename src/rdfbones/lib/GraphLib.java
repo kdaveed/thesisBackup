@@ -56,34 +56,20 @@ public class GraphLib {
     
     List<Triple> toReturn = new ArrayList<Triple>();
     List<Integer> nums = getTypeNums(triples, nodes);
-    set(toReturn, triples, nums);
-    remove(triples, nums);
+    ArrayLib.set(toReturn, triples, nums);
+    ArrayLib.remove(triples, nums);
     return toReturn;
   }
-  
+
   public static List<Triple> getAndRemoveSubClassTriples(List<Triple> triples, List<String> nodes){
     
     List<Triple> toReturn = new ArrayList<Triple>();
     List<Integer> nums = getSubClassNums(triples, nodes);
-    set(toReturn, triples, getTypeNums(triples, nodes));
-    remove(triples, nums);
+    ArrayLib.set(toReturn, triples, nums);
+    ArrayLib.remove(triples, nums);
     return toReturn;
   }
-  
-  public static void set(List<Triple> triplesToSet, List<Triple> triples, List<Integer> integers){
-    
-    for(Integer i : integers){
-      triplesToSet.add(triples.get(i));
-    }
-  }
-  
-  public static void remove(List<Triple> triples, List<Integer> integers){
-    
-    for(int j = integers.size(); j > 0; j--){
-      triples.remove(integers.get(j-1).intValue());
-    }
-  }
- 
+
   public static List<Integer> getTypeNums(List<Triple> triples, List<String> nodes){
  
     return getTripleNums(triples, nodes, "rdf:type");
@@ -104,8 +90,6 @@ public class GraphLib {
       }
       i++;
     }
-    
-    
     return typeNums;
   }
   
@@ -158,8 +142,8 @@ public class GraphLib {
       i++;
     }
     List<Triple> toReturn = new ArrayList<Triple>();
-    set(toReturn, triples, nums);
-    remove(triples, nums);
+    ArrayLib.set(toReturn, triples, nums);
+    ArrayLib.remove(triples, nums);
     return toReturn;
   }
   
