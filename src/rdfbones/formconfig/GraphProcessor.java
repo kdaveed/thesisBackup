@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import rdfbones.rdfdataset.FormData;
 import rdfbones.rdfdataset.Triple;
 import rdfbones.rdfdataset.MultiTriple;
 import rdfbones.rdfdataset.Graph;
@@ -12,13 +13,13 @@ import rdfbones.rdfdataset.Graph;
 
 public class GraphProcessor {
 
-  public static List<Graph> getSubGraphs(List<Triple> triples, String startNode){
+  public static Graph getGraph(List<Triple> triples, List<Triple> restrictionTriples, String startNode){
 
     //CheckSubgraph
     int num = 0;
     int index = 0;
     int tripleNum = 0;
-    int[] multiTriples = new int[triples.size()];
+    Triple multiTriple = null;
     boolean valid = true;
     //Checking how many multitriples are coming out
     for(Triple triple : triples){
@@ -26,8 +27,7 @@ public class GraphProcessor {
             || triple.object.varName.equals(startNode)){
         if(triple instanceof MultiTriple){
           //We are here only once
-          multiTriples[num] = index;
-          num++;
+          multiTriple = triple;
         } else { //If we are here then the condition is not fulfilled
           valid = false;
           break;
@@ -35,24 +35,18 @@ public class GraphProcessor {
       }
       index++;
     }
-    List<Graph> graph = new ArrayList<Graph>();
-    if(valid && multiTriples.length > 0){
-      for(int i = 0; i < num; i++){
+    if(valid){
         List<Triple> graphTriples = new ArrayList<Triple>();
-        Triple multiTriple = triples.get(multiTriples[i]);
         graphTriples.add(multiTriple);
-        triples.remove(multiTriples[i]);
-        graph.add(getSubGraph(triples, getObject(multiTriple, startNode), graphTriples));  
-      }
+        triples.remove(multiTriple);
+        return getSubGraph(triples, restrictionTriples, getObject(multiTriple, startNode), graphTriples);  
     } else {
-      
       List<Triple> graphTriples = new ArrayList<Triple>();
-      graph.add(getSubGraph(triples, startNode, graphTriples));
+      return getSubGraph(triples, restrictionTriples, startNode, graphTriples);
     }
-    return graph;
   }
   
-  public static Graph getSubGraph(List<Triple> triples, String startNode, List<Triple> graphTriples){
+  public static Graph getSubGraph(List<Triple> triples, List<Triple> restrictionTriples, String startNode, List<Triple> graphTriples){
     
     Graph graph = new Graph();
     if(graphTriples.size() > 0){
@@ -96,9 +90,10 @@ public class GraphProcessor {
     }
     //Set the found triple to the graph
     graph.triples = graphTriples;
+    graph.restrictionTriples = getRestrictionTriples(graphTriples, restrictionTriples);
     for(String subGraphNode : subGraphNodes.keySet()){
       String node = subGraphNodes.get(subGraphNode);
-      graph.subGraphs.put(subGraphNode, getSubGraphs(triples, node));
+      graph.subGraphs.put(subGraphNode, getGraph(triples, restrictionTriples, node));
     }
     return graph;
   }
@@ -119,7 +114,36 @@ public class GraphProcessor {
     } else {
       return triple.subject.varName;
     }
+  }  
+  
+  static List<Triple> getRestrictionTriples(List<Triple> graphTriples, List<Triple> restrictionTriples){
+    
+    List<Triple> restTriples = new ArrayList<Triple>();
+    List<String> nodes = getNodes(graphTriples);
+    for(Triple triple : restrictionTriples){
+      if(nodes.contains(triple.subject.varName) && nodes.contains(triple.object.varName)){
+        restTriples.add(triple);
+      }
+      if(triple.predicate.equals("rdf:type") && nodes.contains(triple.subject.varName)){
+        restTriples.add(triple);
+        nodes.add(triple.object.varName);
+      }
+    }
+    return restTriples;
   }
   
+  static List<String> getNodes(List<Triple> triples){
+    
+    List<String> nodes = new ArrayList<String>();
+    for(Triple triple : triples){
+      if(! nodes.contains(triple.subject.varName)){
+        nodes.add(triple.subject.varName);
+      }
+      if(! nodes.contains(triple.object.varName)){
+        nodes.add(triple.object.varName);
+      }
+    }
+    return nodes; 
+  }
 }
 

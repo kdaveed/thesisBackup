@@ -14,8 +14,6 @@ public class Triples {
 
   public List<Triple> triples = new ArrayList<Triple>();
   
-  private static final Log log = LogFactory.getLog(BonyDataSet2.class.getName());
-  
   public String getTriples(){
      String t = new String("");
      for(Triple triple : this.triples){
