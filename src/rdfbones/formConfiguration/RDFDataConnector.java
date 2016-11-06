@@ -13,6 +13,7 @@ import rdfbones.lib.ArrayLib;
 import rdfbones.lib.GraphLib;
 import rdfbones.lib.QueryLib;
 import rdfbones.lib.SPARQLDataGetter;
+import rdfbones.lib.SubSPARQLDataGetter;
 import rdfbones.rdfdataset.FormData;
 import rdfbones.rdfdataset.Graph;
 import rdfbones.rdfdataset.InputNode;
@@ -63,25 +64,40 @@ public class RDFDataConnector {
     String queryTriples = new String("");
     //Query triples
     for(Triple triple : this.graph.dataTriples){
-      queryTriples += queryTriples.getTriple();
+      queryTriples += triple.getTriple();
     }
     //Most Specific Types
     for(String uri : this.graph.dataResources){
       queryTriples += QueryLib.getMSTTriple(uri);
     }
-   
+    
     for(String inputNode : this.graph.inputNodes){
       queryTriples = queryTriples.replace("?" + inputNode, vreq.getParameter(inputNode));
     }
-    this.dataRetriever = new SPARQLDataGetter(selectVars, 
-        queryTriples, this.selectUris, this.selectUris);
+    
+    if(this.graph.startNode.equals("")){
+      //Main graph
+      this.dataRetriever = new SPARQLDataGetter(this.vreq,selectVars,  
+          queryTriples, this.graph.dataResources, this.graph.dataResources);
+    } else {
+      //Subgraph
+      this.dataRetriever = new SubSPARQLDataGetter(this.vreq,selectVars,  
+          queryTriples, this.graph.dataResources, this.graph.dataResources, this.graph.startNode);
+    }
   }
   
   public JSONArray getExistingData() throws JSONException{
     
-    List<Map<String, String>> results = this.dataRetriever.getData(this.vreq);
+    return this.getJSON(this.dataRetriever.getData());
+  }
+  
+  public JSONArray getExistingData(String value) throws JSONException{
     
-    QueryUtils.getResult(this.query, this.selectUris, this.selectLiterals, vreq);
+    return this.getJSON(((SubSPARQLDataGetter) this.dataRetriever).getData(value));
+  }
+  
+  public JSONArray getJSON(List<Map<String, String>> results) throws JSONException{
+    
     JSONArray resultArray = new JSONArray();
     for(Map<String, String> result : results){
       JSONObject jsonObject = new JSONObject();
@@ -96,19 +112,6 @@ public class RDFDataConnector {
     return resultArray;
   }
   
-  public JSONArray getExistingData(VitroRequest vreq, String value, String key) throws JSONException{
-    
-    //Substitute input data
-    query = this.query.replace("?" + key, "<" + value + ">");
-    this.dataRetriever.setInput
-    
-    return this.getJSON(vreq);
-  }
-  
-  JSONArray getJSON(VitroRequest vreq) throws JSONException{
-    
-
-  }
 
   static JSONObject getInstanceObject(Map<String, String> result, String varName) throws JSONException{
     

@@ -45,7 +45,6 @@ public class Graph {
   
   public void init(VitroRequest vreq, FormData formData) throws JSONException{
    
-    
     this.dataResources = GraphLib.getNewInstanceNodes(this.dataTriples);
     this.dataLiterals = GraphLib.getLiteralNodes(this.dataTriples);
     this.inputNodes = GraphLib.getInputNodes(this.dataTriples);
@@ -81,7 +80,7 @@ public class Graph {
   JSONArray getGraphData(VitroRequest vreq, String initialValue, String key) throws JSONException{
   
     //Here the parent graph input is used as well
-    this.results = this.rdfDataConnector.getResult(vreq, initialValue, key);
+    this.results = this.rdfDataConnector.getData(vreq, initialValue, key);
     this.setSubGraphData(vreq);
     return this.results;
   }
