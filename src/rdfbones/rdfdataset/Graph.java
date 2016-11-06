@@ -10,25 +10,31 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import rdfbones.formConfiguration.RDFDataConnector;
-
 import rdfbones.formconfig.GraphProcessor;
+import rdfbones.lib.GraphLib;
 import vivoclasses.VitroRequest;
 
 public class Graph {
 
-  public List<Triple> triples;
+  public List<Triple> dataTriples;
   public List<Triple> restrictionTriples;
   public List<String> newInstances;
+  public List<String> inputNodes = new ArrayList<String>();
   public Triple multiTriple = null;
   public String startNode;
   public Map<String, Graph> subGraphs = new HashMap<String, Graph>();
-  public JSONArray results;
+  public JSONArray existingData;
   public RDFDataConnector rdfDataConnector;
   public FormData formData;
   public List<String> nodes;
+ 
+  public List<String> dataResources;
+  public List<String> dataLiterals;
+  
+  
   public Graph(List<Triple> triples){
     
-    this.triples = triples;
+    this.dataTriples = triples;
     //The SPARQLDataGetter contains the query generated once by the triples
     //this.rdfDataGenerator = new RDFDataGenerator(this);
   }
@@ -37,24 +43,31 @@ public class Graph {
     // TODO Auto-generated constructor stub
   }
   
-  public void initFormData(FormData formData){
-    /*
+  public void init(VitroRequest vreq, FormData formData) throws JSONException{
+   
+    
+    this.dataResources = GraphLib.getNewInstanceNodes(this.dataTriples);
+    this.dataLiterals = GraphLib.getLiteralNodes(this.dataTriples);
+    this.inputNodes = GraphLib.getInputNodes(this.dataTriples);
+    
     this.formData = formData;
+    this.rdfDataConnector = new RDFDataConnector(this, vreq);
+    if(vreq.getParameterMap().containsKey("objectUri")){ 
+      //The existing data has to be queried
+      this.existingData = rdfDataConnector.getExistingData();
+    }
+    
+    
+    //Form Data Initialisation
     for(String subGraphKey : this.subGraphs.keySet()){
       Graph subGraph = this.subGraphs.get(subGraphKey);
       if(formData.subFormData.keySet().contains(subGraphKey)){
-          subGraph.initData(this.formData.subFormData.get(subGraphKey));
+          subGraph.init(vreq, this.formData.subFormData.get(subGraphKey));
       } else {
         //We have to search in the first node
         
       }
-    }*/
-  }
-  
-  void initData(FormData formData){
-    
-    this.formData = formData;
-    this.rdfDataConnector = new RDFDataConnector(this);
+    }
   }
   
   JSONArray getGraphData(VitroRequest vreq) throws JSONException {
@@ -82,7 +95,7 @@ public class Graph {
           //Convert result object to array of the subgraph data
           JSONObject object = results.getJSONObject(i).getJSONObject(key);
           String initialValue = object.getString("uri");
-          String subGraphKey = GraphProcessor.getObject(subGraph.multiTriple, key);
+          String subGraphKey = GraphLib.getObject(subGraph.multiTriple, key);
           object.put(subGraphKey, subGraph.getGraphData(vreq, initialValue, subGraphKey));
         } catch (JSONException e) {
           e.printStackTrace();
@@ -104,7 +117,7 @@ public class Graph {
     
     String tab = new String(new char[n]).replace("\0", "\t");
     System.out.println(tab + "Triples : ");
-    for(Triple triple : triples){
+    for(Triple triple : this.dataTriples){
       System.out.println(tab + triple.subject.varName + "   " + triple.predicate + "   " + triple.object.varName);
     }
     int k = n + 1;

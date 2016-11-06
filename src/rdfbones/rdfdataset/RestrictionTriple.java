@@ -22,15 +22,22 @@ public class RestrictionTriple extends Triple{
     super(subject, predicate, object);
   }
   
+  public int i = 0;
+  
+  
   @Override
   public String getTriple(){
 
     //It returns three triples
     String triples = new String();
-    String restriction = new String("?R_" + this.subject.varName);
+    String restriction = new String("?R_" + this.subject.varName + "_" + i);
     triples += "\t?" + this.subject.varName + " rdfs:subClassOf " + restriction + ".\n";
     triples += "\t" + restriction + " owl:onProperty " + this.predicate + ".\n";
     triples += "\t" + restriction + " owl:hasValue " + "?" + this.object.varName + ".\n"; 
     return triples;
+  }
+  
+  public void increment(){
+    this.i++;
   }
 }

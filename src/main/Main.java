@@ -9,6 +9,7 @@ import rdfbones.rdfdataset.Graph;
 import rdfbones.rdfdataset.InputNode;
 import rdfbones.rdfdataset.LiteralTriple;
 import rdfbones.rdfdataset.MultiTriple;
+import rdfbones.rdfdataset.RestrictionTriple;
 import rdfbones.rdfdataset.SelectNode;
 import rdfbones.rdfdataset.Triple;
 
@@ -19,8 +20,7 @@ public class Main {
     // TODO Auto-generated method stub
     Graph mainGraph = GraphProcessor.getGraph(getTriples(), getRestrictionTriples(), "subject");
     mainGraph.debug(0);
-    
-    //getFormData() will be used after the graph is there
+    mainGraph.initData(getFormData());
   }
   
   static List<Triple> getTriples(){
@@ -33,7 +33,6 @@ public class Main {
     triple.add(new Triple(new SelectNode("assay"), "hasSpecInput", "specimen"));
     triple.add(new MultiTriple("assay", "hasSpecOutput", "measurementDatum"));
     triple.add(new Triple("measurementDatum", "hasCategoricalLabel", "categoricalLabel"));
-    triple.add(new LiteralTriple(new SelectNode("boneSegment"), "boneSegmentLabel", new SelectNode("label")));
     return triple;
   }
   
@@ -41,16 +40,16 @@ public class Main {
     
     List<Triple> triple = new ArrayList<Triple>();
     triple.add(new Triple("subject", "rdf:type", "subjectType"));
-    triple.add(new Triple("subjectType", "obo:BFO_0000051", "studyDesignExecutionType"));
+    triple.add(new RestrictionTriple("subjectType", "obo:BFO_0000051", "studyDesignExecutionType"));
     //Now I omit the form related restriction
     
     triple.add(new Triple("specimenCollectionProcess", "rdf:type", "specimenCollectionProcessType"));
     triple.add(new Triple("assay", "rdf:type", "assayType"));
     triple.add(new Triple("specimen", "rdf:type", "specimenType"));
     
-    triple.add(new Triple("assayType", "obo:OBI_0000293", "specimenType"));
-    triple.add(new Triple("studyDesignExecutionType", "obo:BFO_0000051", "specimenType"));
-    
+    triple.add(new RestrictionTriple("assayType", "obo:OBI_0000293", "specimenType"));
+    triple.add(new RestrictionTriple("studyDesignExecutionType", "obo:BFO_0000051", "specimenType"));
+
     return triple;
   }
   

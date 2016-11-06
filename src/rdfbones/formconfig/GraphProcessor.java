@@ -9,19 +9,15 @@ import rdfbones.rdfdataset.FormData;
 import rdfbones.rdfdataset.Triple;
 import rdfbones.rdfdataset.MultiTriple;
 import rdfbones.rdfdataset.Graph;
-
+import rdfbones.lib.*;
 
 public class GraphProcessor {
 
   public static Graph getGraph(List<Triple> triples, List<Triple> restrictionTriples, String startNode){
 
-    //CheckSubgraph
-    int num = 0;
-    int index = 0;
-    int tripleNum = 0;
     Triple multiTriple = null;
     boolean valid = true;
-    //Checking how many multitriples are coming out
+    //Iterate through the multitriples
     for(Triple triple : triples){
         if(triple.subject.varName.equals(startNode)
             || triple.object.varName.equals(startNode)){
@@ -33,13 +29,12 @@ public class GraphProcessor {
           break;
         }
       }
-      index++;
     }
     if(valid){
         List<Triple> graphTriples = new ArrayList<Triple>();
         graphTriples.add(multiTriple);
         triples.remove(multiTriple);
-        return getSubGraph(triples, restrictionTriples, getObject(multiTriple, startNode), graphTriples);  
+        return getSubGraph(triples, restrictionTriples, GraphLib.getObject(multiTriple, startNode), graphTriples);  
     } else {
       List<Triple> graphTriples = new ArrayList<Triple>();
       return getSubGraph(triples, restrictionTriples, startNode, graphTriples);
@@ -50,22 +45,19 @@ public class GraphProcessor {
     
     Graph graph = new Graph();
     if(graphTriples.size() > 0){
-      //This is the multitriple
       graph.multiTriple = graphTriples.get(0);
     }
     Map<String, String> subGraphNodes = new HashMap<String, String>();
     List<String> graphNodes = new ArrayList<String>();
     graphNodes.add(startNode);
     int i = 0;
-    boolean flag = false;
     while(true){
       List<Integer> tripleNums = new ArrayList<Integer>();
       for(Triple triple : triples){
-        flag = false;
         if(triple.subject.varName.equals(startNode) || triple.object.varName.equals(startNode)){
-          String object = getObject(triple, startNode);
+          String object = GraphLib.getObject(triple, startNode);
           if(triple instanceof MultiTriple){
-             subGraphNodes.put(object, getSubject(triple, startNode));
+             subGraphNodes.put(object, GraphLib.getSubject(triple, startNode));
           } else {
              graphTriples.add(triple);
              graphNodes.add(object);
@@ -79,8 +71,8 @@ public class GraphProcessor {
       for(int j = tripleNums.size(); j > 0; j--){
         triples.remove(tripleNums.get(j-1).intValue());
       }
-      //Remove the used startNode
       if(graphNodes.size() == 0){
+        //The graph is completely discovered
         break;
       } else {
         //There are node to discover
@@ -89,7 +81,7 @@ public class GraphProcessor {
       }
     }
     //Set the found triple to the graph
-    graph.triples = graphTriples;
+    graph.dataTriples = graphTriples;
     graph.restrictionTriples = getRestrictionTriples(graphTriples, restrictionTriples);
     for(String subGraphNode : subGraphNodes.keySet()){
       String node = subGraphNodes.get(subGraphNode);
@@ -98,52 +90,22 @@ public class GraphProcessor {
     return graph;
   }
   
-  public static String getSubject(Triple triple, String varName){
-    
-    if(triple.subject.varName.equals(varName)){
-      return triple.subject.varName;
-    } else {
-      return triple.object.varName;
-    }
-  }
-  
-  public static String getObject(Triple triple, String varName){
-    
-    if(triple.subject.varName.equals(varName)){
-      return triple.object.varName;
-    } else {
-      return triple.subject.varName;
-    }
-  }  
-  
   static List<Triple> getRestrictionTriples(List<Triple> graphTriples, List<Triple> restrictionTriples){
     
+    /*
+     * Note :
+     * 
+     * Now the algorithm does not remove the found restriction triples
+     * it works but due to efficience it has to implemented later.
+     */
     List<Triple> restTriples = new ArrayList<Triple>();
-    List<String> nodes = getNodes(graphTriples);
-    for(Triple triple : restrictionTriples){
-      if(nodes.contains(triple.subject.varName) && nodes.contains(triple.object.varName)){
-        restTriples.add(triple);
-      }
-      if(triple.predicate.equals("rdf:type") && nodes.contains(triple.subject.varName)){
-        restTriples.add(triple);
-        nodes.add(triple.object.varName);
-      }
-    }
+    List<String> nodes = GraphLib.getNodes(graphTriples);
+    //Get type triples
+    restTriples.addAll(GraphLib.getTypeTriples(restrictionTriples, nodes));
+    List<String> typeNodes = GraphLib.getNodes(restTriples);
+    restTriples.addAll(GraphLib.getRestrictionTriple(typeNodes, restrictionTriples));
+    restTriples.addAll(GraphLib.getSubClassTriples(restrictionTriples, typeNodes));
     return restTriples;
-  }
-  
-  static List<String> getNodes(List<Triple> triples){
-    
-    List<String> nodes = new ArrayList<String>();
-    for(Triple triple : triples){
-      if(! nodes.contains(triple.subject.varName)){
-        nodes.add(triple.subject.varName);
-      }
-      if(! nodes.contains(triple.object.varName)){
-        nodes.add(triple.object.varName);
-      }
-    }
-    return nodes; 
   }
 }
 

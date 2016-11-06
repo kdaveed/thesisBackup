@@ -9,6 +9,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import rdfbones.lib.ArrayLib;
+import rdfbones.lib.GraphLib;
+import rdfbones.lib.QueryLib;
+import rdfbones.lib.SPARQLDataGetter;
 import rdfbones.rdfdataset.FormData;
 import rdfbones.rdfdataset.Graph;
 import rdfbones.rdfdataset.InputNode;
@@ -22,114 +26,62 @@ import vivoclasses.VitroRequest;
 public class RDFDataConnector {
 
   Graph graph;
+  VitroRequest vreq;
   
-  private boolean substituted = false;
+  SPARQLDataGetter dataRetriever;
+  SPARQLDataGetter typeRetriever;
   List<String> selectUris = new ArrayList<String>();
   List<String> selectLiterals = new ArrayList<String>();
-  List<String> inputNodes = new ArrayList<String>();
   List<String> queryTriples = new ArrayList<String>();
   FormData formData;
   List<String> dataNodes = new ArrayList<String>();
   
-  
-  public RDFDataConnector(Graph graph){
+  public RDFDataConnector(Graph graph, VitroRequest vreq){
     
+    this.vreq = vreq;
     this.graph = graph;
     this.initFormDataRetrieval();
     this.initFormDataInput();
   }
   
   void initFormDataRetrieval(){
-  
-    for(Triple triple : graph.triples){
-    
-      //InputNodes
-      if(triple.subject instanceof SelectNode){
-        if(this.inputNodes.contains(triple.subject.varName)){
-          this.inputNodes.add(triple.subject.varName);
-        }
-      }
-      
-      if(triple.object instanceof SelectNode){
-        if(this.inputNodes.contains(triple.object.varName)){
-          this.inputNodes.add(triple.object.varName);
-        }
-      }
-      
-      if(triple.subject instanceof SelectNode){
-        this.selectUris.add(triple.subject.varName);
-      }
-      
-      //By restriction triple everything is selected
-      if(triple instanceof RestrictionTriple){
-        this.selectUris.add(triple.subject.varName);
-        this.selectUris.add(triple.object.varName);
-      }
-      
-      if(triple.object instanceof SelectNode){
-        if(triple instanceof LiteralTriple){
-          this.selectLiterals.add(triple.object.varName);  
-        } else {
-          this.selectUris.add(triple.object.varName);
-        }
-      }
-      queryTriples.add(triple.getTriple());
-    }
-    
+
     //URIs to select
-    String query = new String("SELECT");
-    for(String var : selectUris){
-      query += " ?" + var;
+    String selectVars = new String();
+    for(String var : this.graph.dataResources){
+      selectVars += " ?" + var;
     }
     //Types
     for(String var : selectUris){
-      query += " ?" + var + "Type";
+      selectVars += " ?" + var + "Type";
     }
     
-    for(String var : selectLiterals){
-      query += " ?" + var;
+    for(String var : this.graph.dataLiterals){
+      selectVars += " ?" + var;
     }
-    query += "\nWHERE { \n ";
-    
+
+    String queryTriples = new String("");
     //Query triples
-    for(String triple : queryTriples){
-      query += triple;
+    for(Triple triple : this.graph.dataTriples){
+      queryTriples += queryTriples.getTriple();
     }
     //Most Specific Types
-    for(String uri : this.selectUris){
-      query += getMSTTriple(uri);
+    for(String uri : this.graph.dataResources){
+      queryTriples += QueryLib.getMSTTriple(uri);
     }
-    query += " } ";
-    this.query = query;
-  }
- 
-  public void substituteRequestData(VitroRequest vreq){
-
-    if(!this.substituted){
-      for(String inputNode : this.inputNodes){
-        this.query = this.query.replace("?" + inputNode, vreq.getParameter(inputNode));
-      }
-      this.substituted = true;
+   
+    for(String inputNode : this.graph.inputNodes){
+      queryTriples = queryTriples.replace("?" + inputNode, vreq.getParameter(inputNode));
     }
+    this.dataRetriever = new SPARQLDataGetter(selectVars, 
+        queryTriples, this.selectUris, this.selectUris);
   }
   
-  public JSONArray getResult(VitroRequest vreq) throws JSONException{
+  public JSONArray getExistingData() throws JSONException{
     
-    substituteRequestData(vreq);
-    return getJSON(vreq, this.query);
-  }
-  
-  public JSONArray getResult(VitroRequest vreq, String value, String key) throws JSONException{
+    List<Map<String, String>> results = this.dataRetriever.getData(this.vreq);
     
-    substituteRequestData(vreq);
-    //Substitute input data
-    query = this.query.replace("?" + key, "<" + value + ">");
-    return this.getJSON(vreq, query);
-  }
-  
-  JSONArray getJSON(VitroRequest vreq, String query) throws JSONException{
-    
-    List<Map<String, String>> results = QueryUtils.getResult(this.query, this.selectUris, this.selectLiterals, vreq);
+    QueryUtils.getResult(this.query, this.selectUris, this.selectLiterals, vreq);
     JSONArray resultArray = new JSONArray();
     for(Map<String, String> result : results){
       JSONObject jsonObject = new JSONObject();
@@ -144,6 +96,20 @@ public class RDFDataConnector {
     return resultArray;
   }
   
+  public JSONArray getExistingData(VitroRequest vreq, String value, String key) throws JSONException{
+    
+    //Substitute input data
+    query = this.query.replace("?" + key, "<" + value + ">");
+    this.dataRetriever.setInput
+    
+    return this.getJSON(vreq);
+  }
+  
+  JSONArray getJSON(VitroRequest vreq) throws JSONException{
+    
+
+  }
+
   static JSONObject getInstanceObject(Map<String, String> result, String varName) throws JSONException{
     
     JSONObject jsonObject = new JSONObject();
@@ -152,78 +118,78 @@ public class RDFDataConnector {
     return jsonObject;
   }
   
-  static String getMSTTriple(String varName){
-    
-    return new String("?" + varName + "\tvitro:mostSpecificType\t" + varName + "Type .\n");
-  }
+
   
   /*
    * DATA INPUT
    */
-  
   //These triples will be stored - including the type triples
+  
   List<Triple> dataTriples = new ArrayList<Triple>();
   String typeQuery = new String();
   List<String> typeQueryInputs = new ArrayList<String>();
   List<String> typesToSelect = new ArrayList<String>();
-  String query;
+  boolean typeQueryFlag = false;
   
   void initFormDataInput(){
     
     
+    //By restriction triple everything is selected
+    /*
+    if(triple instanceof RestrictionTriple){
+      this.selectUris.add(triple.subject.varName);
+      this.selectUris.add(triple.object.varName);
+    }
+    */
+    
+    List<Triple> triplesForQuery = new ArrayList<Triple>();
+    //We are working with the restrictionTriples of the graph
+    
+    //this.typesToSelect = GraphLib.getNewInstanceNodes(this.graph.triples);
+    
+    if(this.typesToSelect.size() > 0){
+      for(Triple triple : this.graph.restrictionTriples){
+        if(triple instanceof RestrictionTriple){
+          ((RestrictionTriple) triple).increment();
+        }
+        if(triple.predicate.equals("rdf:type")){
+          if(this.formData.input.equals(triple.subject.varName) || 
+               this.formData.inputs.contains(triple.subject.varName)){
+            triplesForQuery.add(triple);
+            ArrayLib.addDistinct(this.typesToSelect, triple.object.varName);
+          }
+        } else {
+          triplesForQuery.add(triple);
+          ArrayLib.addDistinct(this.typesToSelect, triple.subject.varName);
+          ArrayLib.addDistinct(this.typesToSelect, triple.object.varName);
+        }
+      }
+      //Assemble query
+      
+      this.typeQueryFlag = true;
+    } 
   }
   
   //Called initially
   public String saveData(JSONObject inputObject, VitroRequest vreq) throws JSONException{
     
-    Map<String, String> instanceMap = new HashMap<String, String>();
-    return generateN3(inputObject, vreq, this.getInstanceMap(inputObject, vreq, instanceMap));
+    Map<String, String> variableMap = new HashMap<String, String>();
+    this.setInstanceMap(inputObject, vreq, variableMap);
+    this.setTypeMap(inputObject, vreq, variableMap);
+    return generateN3(inputObject, vreq, variableMap);
   }
   
   //Called for subgraphs
   public String saveData(JSONObject inputObject, VitroRequest vreq, String key, String value) throws JSONException{
     
-    Map<String, String> instanceMap = new HashMap<String, String>();
-    instanceMap.put(key, value);
-    return generateN3(inputObject, vreq, this.getInstanceMap(inputObject, vreq, instanceMap));
+    Map<String, String> variableMap = new HashMap<String, String>();
+    this.setInstanceMap(inputObject, vreq, variableMap);
+    this.setTypeMap(inputObject, vreq, variableMap);
+    variableMap.put(key, value);
+    return generateN3(inputObject, vreq, variableMap);
   }
   
-  public String generateN3(JSONObject inputObject, VitroRequest vreq, Map<String, String> instanceMap) throws JSONException{
-    
-    String triplesToStore = new String();
-    Map<String, String> typeMap = this.getTypeMap(inputObject, vreq);
-    //Creating string to create
-    String triplesToCreate = new String();
-    for(Triple triple : this.dataTriples){
-      triplesToCreate += triple.getTriple();
-    }
-    //Substitute classes
-    triplesToCreate = QueryUtils.subUrisForQueryVars(this.typeQuery, typeMap);
-    triplesToCreate = QueryUtils.subUrisForQueryVars(this.typeQuery, instanceMap);
-    
-    for(String subgraphKey : this.graph.subGraphs.keySet()){
-      //Calling subgraphs
-      for(Graph subGraph : this.graph.subGraphs.get(subgraphKey)){
-        String key = subGraph.startNode;
-        String value = instanceMap.get(key);
-        String dataKey = new String();
-        if(inputObject.has(key)){
-          dataKey = key;
-        } else {
-          dataKey = subGraph.getIndirectConnector(inputObject);
-        }
-        JSONArray array = inputObject.getJSONArray(dataKey);
-        for(int i = 0; i < array.length(); i++){
-          JSONObject jsonObject = array.getJSONObject(i); 
-          subGraph.rdfDataConnector.saveData(jsonObject, vreq, dataKey, value);
-        }
-        triplesToCreate += subGraph.rdfDataConnector.saveData(inputObject, vreq);
-      }
-    }
-    return triplesToStore;
-  }
-  
-  Map<String, String> getInstanceMap(JSONObject obj, VitroRequest vreq, Map<String, String> instanceMap) throws JSONException{
+  void setInstanceMap(JSONObject obj, VitroRequest vreq, Map<String, String> instanceMap) throws JSONException{
     
     /*
      * Notes : 
@@ -244,21 +210,51 @@ public class RDFDataConnector {
        instanceMap.put(dataNode, vreq.generateNewUri());
      }
     }
-    return instanceMap;
   } 
   
-  
-  Map<String, String> getTypeMap(JSONObject obj, VitroRequest vreq) throws JSONException{
+  void setTypeMap(JSONObject obj, VitroRequest vreq, Map<String, String> variableMap) throws JSONException{
 
-    Map<String, String> inputMap = new HashMap<String, String>();
     for(String typeQueryInput : this.typeQueryInputs){
       if(this.formData.input.equals(typeQueryInput)){
-        inputMap.put(typeQueryInput, obj.getString("uri"));
+        variableMap.put(typeQueryInput, obj.getString("uri"));
       } else {
-        inputMap.put(typeQueryInput, obj.getJSONObject(typeQueryInput).getString("uri"));
+        variableMap.put(typeQueryInput, obj.getJSONObject(typeQueryInput).getString("uri"));
       }
     }
-    this.typeQuery = QueryUtils.subUrisForQueryVars(this.typeQuery, inputMap);
-    return QueryUtils.getResult(this.typeQuery, this.typesToSelect, null, vreq).get(0);
+    //Have to be revised
+    this.typeQuery = QueryUtils.subUrisForQueryVars(this.typeQuery, variableMap);
+    variableMap.putAll(QueryUtils.getResult(this.typeQuery, this.typesToSelect, null, vreq).get(0));
+  }
+  
+  public String generateN3(JSONObject inputObject, VitroRequest vreq, Map<String, String> variableMap) throws JSONException{
+    
+    String triplesToStore = new String();
+    //Creating string to create
+    String triplesToCreate = new String();
+    for(Triple triple : this.dataTriples){
+      triplesToCreate += triple.getTriple();
+    }
+    //Substitute variables
+    triplesToCreate = QueryUtils.subUrisForQueryVars(this.typeQuery, variableMap);
+    
+    for(String subgraphKey : this.graph.subGraphs.keySet()){
+      //Calling subgraphs
+      Graph subGraph = this.graph.subGraphs.get(subgraphKey);
+      String key = subGraph.startNode;
+      String value = variableMap.get(key);
+      String dataKey = new String();
+      if(inputObject.has(key)){
+        dataKey = key;
+      } else {
+        dataKey = subGraph.getIndirectConnector(inputObject);
+      }
+      JSONArray array = inputObject.getJSONArray(dataKey);
+      for(int i = 0; i < array.length(); i++){
+        JSONObject jsonObject = array.getJSONObject(i); 
+        subGraph.rdfDataConnector.saveData(jsonObject, vreq, dataKey, value);
+      }
+      triplesToCreate += subGraph.rdfDataConnector.saveData(inputObject, vreq);
+    }
+    return triplesToStore;
   }
 }
