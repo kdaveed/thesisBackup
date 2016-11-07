@@ -6,6 +6,7 @@ import java.util.List;
 import org.json.JSONException;
 
 import rdfbones.formconfig.GraphProcessor;
+import rdfbones.lib.JSONDummy;
 import rdfbones.rdfdataset.FormData;
 import rdfbones.rdfdataset.Graph;
 import rdfbones.rdfdataset.InputNode;
@@ -27,6 +28,8 @@ public class Main {
     VitroRequest vreq = new VitroRequest();
     mainGraph.init(vreq, getFormData());
     mainGraph.debug(0);
+    String triplesToCreate = mainGraph.saveData(JSONDummy.getDummy1(), vreq);
+    System.out.println("Triples to create : \n" + triplesToCreate);
   }
   
   static List<Triple> getTriples(){
@@ -38,7 +41,6 @@ public class Main {
     triple.add(new Triple("specimenCollectionProcess", "obo:OBI_0000299", "specimen"));
     triple.add(new Triple("assay", "obo:OBI_0000293", "specimen"));
     triple.add(new MultiTriple("assay", "obo:OBI_0000299", "measurementDatum"));
-    triple.add(new Triple("measurementDatum", "rdf:type", "measurementDatumType"));
     triple.add(new Triple("measurementDatum", "obo:IAO_0000299", new ExistingInstance("categoricalLabel")));
     return triple;
   }
@@ -46,7 +48,7 @@ public class Main {
   static List<Triple> getRestrictionTriples(){
     
     List<Triple> triple = new ArrayList<Triple>();
-    triple.add(new Triple("subject", "rdf:type", "subjectType"));
+    triple.add(new Triple(new InputNode("subject"), "rdf:type", "subjectType"));
     triple.add(new RestrictionTriple("subjectType", "obo:BFO_0000051", "studyDesignExecutionType"));
     triple.add(new Triple("studyDesingExecution", "rdf:type", "studyDesignExecutionType"));
     triple.add(new Triple("studyDesignExecutionType", "rdfs:subClassOf", "obo:OBI_0000471"));
@@ -59,6 +61,8 @@ public class Main {
     triple.add(new Triple("specimenCollectionProcessType", "rdfs:subClassOf", "obo:OBI_0000659"));
     triple.add(new Triple("specimenType", "rdfs:subClassOf", "obo:OBI_0100051"));
     
+    triple.add(new Triple("measurementDatum", "rdf:type", "measurementDatumType"));
+
     triple.add(new RestrictionTriple("assayType", "obo:OBI_0000293", "specimenType"));
     triple.add(new RestrictionTriple("specimenCollectionProcessType", "obo:BFO_0000051", "specimenType"));
 
@@ -70,11 +74,11 @@ public class Main {
     FormData formData = new FormData();
     FormData assayType = new FormData("assayType");
     FormData boneSegment = new FormData("boneSegment");
-    FormData measurementDatum = new FormData("measurementDatum");
+    FormData measurementDatum = new FormData("measurementDatumType");
     measurementDatum.setInputs("categoricalLabel");
     assayType.addSubformData("boneSegment", boneSegment);
-    assayType.addSubformData("measurementDatum", measurementDatum);
-    formData.addSubformData("assayType", assayType);
+    assayType.addSubformData("measurementDatumType", measurementDatum);
+    formData.addSubformData("assay", assayType);
     return formData;
   } 
 }

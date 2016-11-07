@@ -47,6 +47,11 @@ public class Graph {
     this.startNode = startNode;
   }
   
+  public String saveData(JSONObject inputData, VitroRequest vreq) throws JSONException{
+    
+    return this.rdfDataConnector.saveData(inputData, vreq);
+  }
+  
   public void initNodes(){
     this.dataResources = GraphLib.getNewInstanceNodes(this.dataTriples);
     this.dataLiterals = GraphLib.getLiteralNodes(this.dataTriples);
@@ -136,7 +141,6 @@ public class Graph {
     if(this.rdfDataConnector.typeRetriever != null){
       System.out.println(tab + "TypeRetriver Query :      " +  this.rdfDataConnector.typeRetriever.getQuery() + "\n");
     }
-
     int k = n + 1;
     System.out.println(tab + "Subgraphs :  " + subGraphs.keySet().size());
     if(subGraphs.keySet().size() > 0){
@@ -145,14 +149,5 @@ public class Graph {
         subGraphs.get(key).debug(k);
       }  
     } 
-  }
-  
-  public String getIndirectConnector(JSONObject obj){
-    for(String node : this.nodes){
-      if(obj.has(node)){
-        return node;
-      }
-    }
-    return null;
   }
 }
