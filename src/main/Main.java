@@ -38,6 +38,7 @@ public class Main {
     triple.add(new Triple("specimenCollectionProcess", "obo:OBI_0000299", "specimen"));
     triple.add(new Triple("assay", "obo:OBI_0000293", "specimen"));
     triple.add(new MultiTriple("assay", "obo:OBI_0000299", "measurementDatum"));
+    triple.add(new Triple("measurementDatum", "rdf:type", "measurementDatumType"));
     triple.add(new Triple("measurementDatum", "obo:IAO_0000299", new ExistingInstance("categoricalLabel")));
     return triple;
   }
@@ -56,7 +57,7 @@ public class Main {
     triple.add(new Triple("specimen", "rdf:type", "specimenType"));
     
     triple.add(new Triple("specimenCollectionProcessType", "rdfs:subClassOf", "obo:OBI_0000659"));
-    triple.add(new Triple("assayType", "rdfs:subClassOf", "obo:OBI_0100051"));
+    triple.add(new Triple("specimenType", "rdfs:subClassOf", "obo:OBI_0100051"));
     
     triple.add(new RestrictionTriple("assayType", "obo:OBI_0000293", "specimenType"));
     triple.add(new RestrictionTriple("specimenCollectionProcessType", "obo:BFO_0000051", "specimenType"));

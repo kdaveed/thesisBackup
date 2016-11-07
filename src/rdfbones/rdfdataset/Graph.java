@@ -129,9 +129,13 @@ public class Graph {
     System.out.println(tab + "ClassNodes :      " + ArrayLib.debugList(this.classNodes));
     System.out.println(tab + "DataResources :      " + ArrayLib.debugList(this.dataResources));
     System.out.println(tab + "InputNodes :      " + ArrayLib.debugList(this.inputNodes));
-
-    System.out.println(tab + "DataRetriever Query : \n      " +  this.rdfDataConnector.dataRetriever.getQuery());
-    //System.out.println(tab + "TypeRetriver Query :      " +  this.rdfDataConnector.typeRetriever.getQuery() + "\n");
+    System.out.println(tab + "FormInput : "  + this.formData.input);
+    System.out.println(tab + "FormInputs : "  + ArrayLib.debugList(this.formData.inputs));
+    
+    //System.out.println(tab + "DataRetriever Query : \n      " +  this.rdfDataConnector.dataRetriever.getQuery());
+    if(this.rdfDataConnector.typeRetriever != null){
+      System.out.println(tab + "TypeRetriver Query :      " +  this.rdfDataConnector.typeRetriever.getQuery() + "\n");
+    }
 
     int k = n + 1;
     System.out.println(tab + "Subgraphs :  " + subGraphs.keySet().size());

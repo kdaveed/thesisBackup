@@ -114,9 +114,7 @@ public class RDFDataConnector {
     jsonObject.put(varName + "Type", result.get(varName + "Type"));
     return jsonObject;
   }
-  
-
-  
+    
   /*
    * DATA INPUT
    */
@@ -137,27 +135,32 @@ public class RDFDataConnector {
 
     for(Triple triple : this.graph.restrictionTriples){
       if(triple instanceof RestrictionTriple){
-        ((RestrictionTriple) triple).increment();
-      }
-      if(triple.predicate.equals("rdf:type")){
-        if(this.formData.input.equals(triple.subject.varName) || 
-             this.formData.inputs.contains(triple.subject.varName)){
-          typeQueryTriples.add(triple);
-          ArrayLib.addDistinct(typesToSelect, triple.object.varName);
-        }
-      } else {
         typeQueryTriples.add(triple);
-        ArrayLib.addDistinct(typesToSelect, triple.subject.varName);
-        ArrayLib.addDistinct(typesToSelect, triple.object.varName);
+        ((RestrictionTriple) triple).increment();
+      } else {
+         if(triple.predicate.equals("rdf:type")){
+          if(this.formData.input.equals(triple.subject.varName) || 
+               this.formData.inputs.contains(triple.subject.varName)){
+            typeQueryTriples.add(triple);
+            ArrayLib.addDistinct(typesToSelect, triple.object.varName);
+          }
+        } else {
+          typeQueryTriples.add(triple);
+          ArrayLib.addDistinct(typesToSelect, triple.subject.varName);
+          if(!triple.object.varName.contains("<") && !triple.object.varName.contains(":"))
+            ArrayLib.addDistinct(typesToSelect, triple.object.varName);
+        }
       }
     }
     if(typesToSelect.size() > 0){
       //There is something to query regarding the types
       this.typeQueryFlag = true;
       this.typeRetriever = new SubSPARQLDataGetter(this.vreq,
-          SPARQLUtils.assembleQueryTriples(typeQueryTriples),
           SPARQLUtils.assembleSelectVars(typesToSelect),
+          SPARQLUtils.assembleQueryTriples(typeQueryTriples),
           typesToSelect, null, this.formData.input);
+    } else {
+      
     }
   }
   
