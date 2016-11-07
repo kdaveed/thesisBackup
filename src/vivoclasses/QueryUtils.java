@@ -1,6 +1,7 @@
 package vivoclasses;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -8,7 +9,19 @@ public class QueryUtils {
 
   public static List<Map<String, String>> getResult(String queryStr, List<String> uris, List<String> literals, VitroRequest vreq){
     
+    //Generating dummy data
     List<Map<String, String>> result = new ArrayList<Map<String, String>>();
+    Map<String, String> singleResult = new HashMap<String, String>();
+    for(String uri : uris){
+      singleResult.put(uri, uri + (Math.random() * 1000));
+    }
+    if(literals != null){
+      for(String literal : literals){
+        singleResult.put(literal, literal + (Math.random() * 1000));
+      }
+    }
+
+    result.add(singleResult);
     return result;
   }
   
