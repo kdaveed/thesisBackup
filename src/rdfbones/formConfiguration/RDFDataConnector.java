@@ -16,6 +16,7 @@ import rdfbones.lib.SPARQLUtils;
 import rdfbones.lib.SubSPARQLDataGetter;
 import rdfbones.rdfdataset.FormData;
 import rdfbones.rdfdataset.Graph;
+import rdfbones.rdfdataset.InputNode;
 import rdfbones.rdfdataset.RestrictionTriple;
 import rdfbones.rdfdataset.Triple;
 import vivoclasses.QueryUtils;
@@ -32,7 +33,6 @@ public class RDFDataConnector {
   List<String> selectLiterals = new ArrayList<String>();
   List<String> queryTriples = new ArrayList<String>();
   FormData formData;
-  List<String> dataNodes = new ArrayList<String>();
   
   public RDFDataConnector(Graph graph, VitroRequest vreq){
     
@@ -60,6 +60,7 @@ public class RDFDataConnector {
     //Query triples
     for(Triple triple : this.graph.dataTriples){
       queryTriples += triple.getTriple();
+      this.dataTriples.add(triple);
     }
     //Most Specific Types
     for(String uri : this.graph.dataResources){
@@ -139,6 +140,9 @@ public class RDFDataConnector {
         ((RestrictionTriple) triple).increment();
       } else {
          if(triple.predicate.equals("rdf:type")){
+          if(!(triple.subject instanceof InputNode)){
+            this.dataTriples.add(triple);
+          }
           if(this.formData.input.equals(triple.subject.varName) || 
                this.formData.inputs.contains(triple.subject.varName)){
             typeQueryTriples.add(triple);
@@ -169,7 +173,10 @@ public class RDFDataConnector {
     
     Map<String, String> variableMap = new HashMap<String, String>();
     this.setInstanceMap(inputObject, vreq, variableMap);
-    this.setTypeMap(inputObject, vreq, variableMap);
+    //For now we assume that there is only one input
+    List<Map<String, String>> data = ((SubSPARQLDataGetter) this.typeRetriever).getData(inputObject.getString("uri"));
+    variableMap.putAll(data.get(0));
+    //this.setTypeMap(inputObject, vreq, variableMap);
     return generateN3(inputObject, vreq, variableMap);
   }
   
@@ -178,7 +185,9 @@ public class RDFDataConnector {
     
     Map<String, String> variableMap = new HashMap<String, String>();
     this.setInstanceMap(inputObject, vreq, variableMap);
-    this.setTypeMap(inputObject, vreq, variableMap);
+    //this.setTypeMap(inputObject, vreq, variableMap);
+    List<Map<String, String>> data = ((SubSPARQLDataGetter) this.typeRetriever).getData(inputObject.getString("uri"));
+    variableMap.putAll(data.get(0));
     variableMap.put(key, value);
     return generateN3(inputObject, vreq, variableMap);
   }
@@ -195,17 +204,23 @@ public class RDFDataConnector {
      */
 
     //Here we create the new instance nodes
-    for(String dataNode : dataNodes){
+    for(String dataNode : this.graph.dataResources){
      if(this.formData.input.equals(dataNode)){
       instanceMap.put(dataNode, obj.getString("uri"));
      } else if (this.formData.inputs.contains(dataNode)){
+       //Error msg -> here the JSONobject must contain the dataNode key
        instanceMap.put(dataNode, obj.getJSONObject(dataNode).getString("uri"));
      } else {
        instanceMap.put(dataNode, vreq.generateNewUri());
      }
     }
+    //Check the incoming class types
+    if(!this.graph.dataResources.contains(this.formData.input)){
+      instanceMap.put(this.formData.input, obj.getString("uri"));
+    }
   } 
   
+  /*
   void setTypeMap(JSONObject obj, VitroRequest vreq, Map<String, String> variableMap) throws JSONException{
 
     String value;
@@ -215,14 +230,14 @@ public class RDFDataConnector {
         //variableMap.put(typeQueryInput, );
         value = obj.getString("uri");
       } else {
-        value = obj.getJSONObject(typeQueryInput).getString("uri"));
+        value = obj.getJSONObject().getString("uri"));
       }
     }
     //Have to be revised#
       
     this.typeQuery = QueryUtils.subUrisForQueryVars(this.typeQuery, variableMap);
     variableMap.putAll(QueryUtils.getResult(this.typeQuery, this.typesToSelect, null, vreq).get(0));
-  }
+  }*/
   
   public String generateN3(JSONObject inputObject, VitroRequest vreq, Map<String, String> variableMap) throws JSONException{
     
@@ -233,23 +248,17 @@ public class RDFDataConnector {
       triplesToCreate += triple.getTriple();
     }
     //Substitute variables
-    triplesToCreate = QueryUtils.subUrisForQueryVars(this.typeQuery, variableMap);
+    triplesToCreate = QueryUtils.subUrisForQueryVars(triplesToCreate, variableMap);
     
     for(String subgraphKey : this.graph.subGraphs.keySet()){
       //Calling subgraphs
       Graph subGraph = this.graph.subGraphs.get(subgraphKey);
       String key = subGraph.startNode;
       String value = variableMap.get(key);
-      String dataKey = new String();
-      if(inputObject.has(key)){
-        dataKey = key;
-      } else {
-        dataKey = subGraph.getIndirectConnector(inputObject);
-      }
-      JSONArray array = inputObject.getJSONArray(dataKey);
+      JSONArray array = inputObject.getJSONArray(subGraph.formData.input);
       for(int i = 0; i < array.length(); i++){
         JSONObject jsonObject = array.getJSONObject(i); 
-        subGraph.rdfDataConnector.saveData(jsonObject, vreq, dataKey, value);
+        subGraph.rdfDataConnector.saveData(jsonObject, vreq, key, value);
       }
       triplesToCreate += subGraph.rdfDataConnector.saveData(inputObject, vreq);
     }

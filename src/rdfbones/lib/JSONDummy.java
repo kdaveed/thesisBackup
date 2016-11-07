@@ -7,7 +7,7 @@ import org.json.JSONObject;
 public class JSONDummy {
 
   
-  public JSONObject getDummy1() throws JSONException{
+  public static JSONObject getDummy1() throws JSONException{
     
     //Bone Segments
     JSONObject boneSegment1 = obj("boneSegment1");
@@ -44,15 +44,15 @@ public class JSONDummy {
     return data;
   }
   
-  public JSONObject obj(){
+  public static JSONObject obj(){
     return new JSONObject();
   }  
   
-  public JSONArray arr(){
+  public static JSONArray arr(){
     return new JSONArray();
   }
   
-  JSONObject obj(String varName) throws JSONException{
+  public static JSONObject obj(String varName) throws JSONException{
     return obj().put("uri", varName);
   }
   
