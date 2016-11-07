@@ -34,7 +34,7 @@ public class SPARQLDataGetter {
     return QueryUtils.getResult(getQuery(), this.urisToSelect, this.literalsToSelect, this.vreq);
   }
 
-  String getQuery(){
+  public String getQuery(){
   
     String query = new String("SELECT ");
     query += this.selectVars;

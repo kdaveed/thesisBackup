@@ -1,5 +1,6 @@
 package vivoclasses;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -8,7 +9,7 @@ public class VitroRequest {
   
   public String getParameter(String parameterName){
     
-    return parameterName;
+    return parameterName + "URI";
   }
   
   public String generateNewUri(){
@@ -17,6 +18,7 @@ public class VitroRequest {
   }
   
   public Map<String, String[]> getParameterMap(){
-    return null;
+    
+    return new HashMap<String, String[]>();
   }
 }

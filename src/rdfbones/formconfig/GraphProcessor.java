@@ -9,7 +9,7 @@ import rdfbones.rdfdataset.FormData;
 import rdfbones.rdfdataset.Triple;
 import rdfbones.rdfdataset.MultiTriple;
 import rdfbones.rdfdataset.Graph;
-import rdfbones.lib.*;
+import rdfbones.lib.GraphLib;
 
 public class GraphProcessor {
 
@@ -34,19 +34,21 @@ public class GraphProcessor {
         List<Triple> graphTriples = new ArrayList<Triple>();
         graphTriples.add(multiTriple);
         triples.remove(multiTriple);
-        return getSubGraph(triples, restrictionTriples, GraphLib.getObject(multiTriple, startNode), graphTriples);  
+        return getSubGraph(triples, restrictionTriples, startNode, GraphLib.getObject(multiTriple, startNode), graphTriples);  
     } else {
       List<Triple> graphTriples = new ArrayList<Triple>();
-      return getSubGraph(triples, restrictionTriples, startNode, graphTriples);
+      return getSubGraph(triples, restrictionTriples, null, startNode, graphTriples);
     }
   }
   
-  public static Graph getSubGraph(List<Triple> triples, List<Triple> restrictionTriples, String startNode, List<Triple> graphTriples){
+  public static Graph getSubGraph(List<Triple> triples, List<Triple> restrictionTriples, String initialNode, String startNode, List<Triple> graphTriples){
     
-    String initialNode = new String(startNode);
     Graph graph = new Graph();
     if(graphTriples.size() > 0){
       graph.multiTriple = graphTriples.get(0);
+      graph.startNode = initialNode;
+    } else {
+      graph.startNode = startNode;
     }
     Map<String, String> subGraphNodes = new HashMap<String, String>();
     List<String> graphNodes = new ArrayList<String>();
@@ -101,8 +103,7 @@ public class GraphProcessor {
      * Now the algorithm does not remove the found restriction triples
      * it works but due to efficiency it has to implemented later.
      */
-    
-List<Triple> restTriples = new ArrayList<Triple>();
+    List<Triple> restTriples = new ArrayList<Triple>();
     List<String> nodes = GraphLib.getNodes(graphTriples);
     //Get type triples
     restTriples.addAll(GraphLib.getAndRemoveTypeTriples(restrictionTriples, nodes));

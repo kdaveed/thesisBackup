@@ -1,9 +1,9 @@
 package rdfbones.rdfdataset;
 
 
-public class SelectNode extends RDFNode {
+public class ExistingInstance extends RDFNode {
 
-  public SelectNode(String varName) {
+  public ExistingInstance(String varName) {
     super(varName);
     // TODO Auto-generated constructor stub
   }

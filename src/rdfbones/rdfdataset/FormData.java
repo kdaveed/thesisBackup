@@ -9,7 +9,7 @@ public class FormData {
 
   public String input;
   //These are the inputs with cardinality 1
-  public List<String> inputs;
+  public List<String> inputs = new ArrayList<String>();
   Map<String, FormData> subFormData = new HashMap<String, FormData>();
   
   public FormData(){

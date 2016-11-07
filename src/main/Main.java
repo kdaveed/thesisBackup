@@ -11,8 +11,9 @@ import rdfbones.rdfdataset.Graph;
 import rdfbones.rdfdataset.InputNode;
 import rdfbones.rdfdataset.LiteralTriple;
 import rdfbones.rdfdataset.MultiTriple;
+import rdfbones.rdfdataset.NewInstance;
 import rdfbones.rdfdataset.RestrictionTriple;
-import rdfbones.rdfdataset.SelectNode;
+import rdfbones.rdfdataset.ExistingInstance;
 import rdfbones.rdfdataset.Triple;
 import vivoclasses.VitroRequest;
 
@@ -22,22 +23,22 @@ public class Main {
 
     // TODO Auto-generated method stub
     Graph mainGraph = GraphProcessor.getGraph(getTriples(), getRestrictionTriples(), "subject");
-    mainGraph.debug(0);
     //Test interface 
     VitroRequest vreq = new VitroRequest();
     mainGraph.init(vreq, getFormData());
+    mainGraph.debug(0);
   }
   
   static List<Triple> getTriples(){
     
     List<Triple> triple = new ArrayList<Triple>();
-    triple.add(new MultiTriple(new InputNode("subject"), "hasPart", "studyDesingExecution"));
-    triple.add(new MultiTriple("studyDesingExecution", "hasPart", "specimenCollectionProcess"));
-    triple.add(new MultiTriple("specimenCollectionProcess", "hasSpecInput", new SelectNode("boneSegment")));
-    triple.add(new Triple("specimenCollectionProcess", "hasSpecOutput", "specimen"));
-    triple.add(new Triple(new SelectNode("assay"), "hasSpecInput", "specimen"));
-    triple.add(new MultiTriple("assay", "hasSpecOutput", "measurementDatum"));
-    triple.add(new Triple("measurementDatum", "hasCategoricalLabel", "categoricalLabel"));
+    triple.add(new MultiTriple(new InputNode("subject"), "obo:BFO_0000051", "studyDesingExecution"));
+    triple.add(new MultiTriple("studyDesingExecution", "obo:BFO_0000051", "specimenCollectionProcess"));
+    triple.add(new MultiTriple("specimenCollectionProcess", "obo:OBI_0000293", new ExistingInstance("boneSegment")));
+    triple.add(new Triple("specimenCollectionProcess", "obo:OBI_0000299", "specimen"));
+    triple.add(new Triple("assay", "obo:OBI_0000293", "specimen"));
+    triple.add(new MultiTriple("assay", "obo:OBI_0000299", "measurementDatum"));
+    triple.add(new Triple("measurementDatum", "obo:IAO_0000299", new ExistingInstance("categoricalLabel")));
     return triple;
   }
   
@@ -48,9 +49,8 @@ public class Main {
     triple.add(new RestrictionTriple("subjectType", "obo:BFO_0000051", "studyDesignExecutionType"));
     triple.add(new Triple("studyDesingExecution", "rdf:type", "studyDesignExecutionType"));
     triple.add(new Triple("studyDesignExecutionType", "rdfs:subClassOf", "obo:OBI_0000471"));
-
-    //Now I omit the form related restriction
     
+    //Now I omit the form related restriction
     triple.add(new Triple("specimenCollectionProcess", "rdf:type", "specimenCollectionProcessType"));
     triple.add(new Triple("assay", "rdf:type", "assayType"));
     triple.add(new Triple("specimen", "rdf:type", "specimenType"));
@@ -72,7 +72,7 @@ public class Main {
     FormData measurementDatum = new FormData("measurementDatum");
     measurementDatum.setInputs("categoricalLabel");
     assayType.addSubformData("boneSegment", boneSegment);
-    assayType.addSubformData("measurement", measurementDatum);
+    assayType.addSubformData("measurementDatum", measurementDatum);
     formData.addSubformData("assayType", assayType);
     return formData;
   } 

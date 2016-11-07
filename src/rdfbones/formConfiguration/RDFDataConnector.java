@@ -26,8 +26,8 @@ public class RDFDataConnector {
   Graph graph;
   VitroRequest vreq;
   
-  SPARQLDataGetter dataRetriever;
-  SPARQLDataGetter typeRetriever;
+  public SPARQLDataGetter dataRetriever;
+  public SPARQLDataGetter typeRetriever;
   List<String> selectUris = new ArrayList<String>();
   List<String> selectLiterals = new ArrayList<String>();
   List<String> queryTriples = new ArrayList<String>();
@@ -38,6 +38,7 @@ public class RDFDataConnector {
     
     this.vreq = vreq;
     this.graph = graph;
+    this.formData = this.graph.formData;
     this.initFormDataRetrieval();
     this.initFormDataInput();
   }
@@ -66,16 +67,16 @@ public class RDFDataConnector {
     }
     
     for(String inputNode : this.graph.inputNodes){
-      queryTriples = queryTriples.replace("?" + inputNode, vreq.getParameter(inputNode));
+      queryTriples = queryTriples.replace("?" + inputNode, "<" + vreq.getParameter(inputNode) + ">");
     }
     
-    if(this.graph.startNode.equals("")){
+    if(this.graph.startNode.equals("subject")){
       //Main graph
       this.dataRetriever = new SPARQLDataGetter(this.vreq,selectVars,  
           queryTriples, this.graph.dataResources, this.graph.dataResources);
     } else {
       //Subgraph
-      this.dataRetriever = new SubSPARQLDataGetter(this.vreq,selectVars,  
+      this.dataRetriever = new SubSPARQLDataGetter(this.vreq, selectVars,  
           queryTriples, this.graph.dataResources, this.graph.dataResources, this.graph.startNode);
     }
   }
@@ -127,7 +128,6 @@ public class RDFDataConnector {
   boolean typeQueryFlag = false;
   
   void initFormDataInput(){
-    
     
     List<Triple> typeQueryTriples = new ArrayList<Triple>();
     List<String> typesToSelect = new ArrayList<String>();
@@ -209,7 +209,7 @@ public class RDFDataConnector {
     if(this.typeQueryFlag){
       if(this.formData.input.equals(typeQueryInput)){
         variableMap.putAll(this.typeRetriever.getData().get(0));
-        variableMap.put(typeQueryInput, );
+        //variableMap.put(typeQueryInput, );
         value = obj.getString("uri");
       } else {
         value = obj.getJSONObject(typeQueryInput).getString("uri"));

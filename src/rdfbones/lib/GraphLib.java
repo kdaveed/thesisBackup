@@ -151,12 +151,8 @@ public class GraphLib {
     
     List<String> newInstances = new ArrayList<String>();
     for(Triple triple : triples){
-      if(triple.subject instanceof NewInstance){
-        ArrayLib.addDistinct(newInstances, triple.subject.varName);
-      }
-      if(triple.object instanceof NewInstance){
-        ArrayLib.addDistinct(newInstances, triple.object.varName);
-      }
+      ArrayLib.addDistinct(newInstances, triple.subject.varName);
+      ArrayLib.addDistinct(newInstances, triple.object.varName);
     }
     return newInstances;
   }
@@ -177,7 +173,7 @@ public class GraphLib {
 
     List<String> literals = new ArrayList<String>();
     for(Triple triple : triples){
-      if(!(triple instanceof LiteralTriple)){
+      if(triple instanceof LiteralTriple){
         ArrayLib.addDistinct(literals, triple.object.varName);
       }
     }
@@ -189,7 +185,7 @@ public class GraphLib {
     List<String> inputNodes = new ArrayList<String>();
     for(Triple triple : triples){
       if(triple.subject instanceof InputNode){
-        ArrayLib.addDistinct(inputNodes, triple.object.varName);
+        ArrayLib.addDistinct(inputNodes, triple.subject.varName);
       }
       if(triple.object instanceof InputNode){
         ArrayLib.addDistinct(inputNodes, triple.object.varName);

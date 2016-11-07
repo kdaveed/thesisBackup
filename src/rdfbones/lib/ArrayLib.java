@@ -26,12 +26,11 @@ public class ArrayLib {
     }
   }
   
-  
   public static String debugList(List<String> list){
     
     String arr = new String("");
     for(String str : list){
-      arr += str + " ";
+      arr += str + " \t ";
     }
     return arr;
   }

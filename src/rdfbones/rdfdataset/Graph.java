@@ -36,14 +36,16 @@ public class Graph {
   public Graph(List<Triple> triples){
     
     this.dataTriples = triples;
-    //The SPARQLDataGetter contains the query generated once by the triples
-    //this.rdfDataGenerator = new RDFDataGenerator(this);
   }
   
   public Graph() {
     // TODO Auto-generated constructor stub
   }
   
+  public Graph(String startNode) {
+    // TODO Auto-generated constructor stub
+    this.startNode = startNode;
+  }
   
   public void initNodes(){
     this.dataResources = GraphLib.getNewInstanceNodes(this.dataTriples);
@@ -54,20 +56,26 @@ public class Graph {
   
   public void init(VitroRequest vreq, FormData formData) throws JSONException{
    
-
     this.formData = formData;
-  
     //Subgraph initialisation
     for(String subGraphKey : this.subGraphs.keySet()){
       Graph subGraph = this.subGraphs.get(subGraphKey);
       if(formData.subFormData.keySet().contains(subGraphKey)){
+          System.out.println("Direct subformdata : " + subGraphKey);
           subGraph.init(vreq, this.formData.subFormData.get(subGraphKey));
       } else {
-        //We have to search in the first node
-        
+        //Search in the nodes of the subforms
+        for(String formDataKey : this.formData.subFormData.keySet()){
+          System.out.println("subGraphKeyInner ------  " +  formDataKey);
+          if(subGraph.dataResources.contains(formDataKey) ||
+              subGraph.classNodes.contains(formDataKey)){
+            System.out.println("Found ------  " +  formDataKey + 
+                "   "  + this.formData.subFormData.get(formDataKey));
+            subGraph.init(vreq, this.formData.subFormData.get(formDataKey));
+          }
+        }
       }
     }
-    
     this.rdfDataConnector = new RDFDataConnector(this, vreq);
     //This runs only at the main graph
     if(this.startNode.equals("")){
@@ -108,22 +116,28 @@ public class Graph {
   public void debug(int n){
     
     String tab = new String(new char[n]).replace("\0", "\t");
+    System.out.println(tab + "StartNode : " + this.startNode);
     System.out.println(tab + "Data triples : ");
     for(Triple triple : this.dataTriples){
-      System.out.println(tab + triple.subject.varName + "   " + triple.predicate + "   " + triple.object.varName);
+      System.out.println(tab + triple.subject.varName + " \t " + triple.predicate + " \t " + triple.object.varName);
     }
+    System.out.println("");
     System.out.println(tab + "Restriction triples : ");
     for(Triple triple : this.restrictionTriples){
-      System.out.println(tab + triple.subject.varName + "   " + triple.predicate + "   " + triple.object.varName);
+      System.out.println(tab + triple.subject.varName + " \t " + triple.predicate + " \t " + triple.object.varName);
     }
-    System.out.println(tab + "ClassNodes : " + ArrayLib.debugList(this.classNodes));
-    System.out.println(tab + "DataResources : " + ArrayLib.debugList(this.dataResources));
+    System.out.println(tab + "ClassNodes :      " + ArrayLib.debugList(this.classNodes));
+    System.out.println(tab + "DataResources :      " + ArrayLib.debugList(this.dataResources));
+    System.out.println(tab + "InputNodes :      " + ArrayLib.debugList(this.inputNodes));
+
+    System.out.println(tab + "DataRetriever Query : \n      " +  this.rdfDataConnector.dataRetriever.getQuery());
+    //System.out.println(tab + "TypeRetriver Query :      " +  this.rdfDataConnector.typeRetriever.getQuery() + "\n");
 
     int k = n + 1;
     System.out.println(tab + "Subgraphs :  " + subGraphs.keySet().size());
     if(subGraphs.keySet().size() > 0){
       for(String key : subGraphs.keySet()){
-        System.out.println(tab + " Key : " + key);
+        System.out.println(tab + "Key : " + key);
         subGraphs.get(key).debug(k);
       }  
     } 

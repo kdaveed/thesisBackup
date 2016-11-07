@@ -9,8 +9,8 @@ import vivoclasses.VitroRequest;
 
 public class SubSPARQLDataGetter extends SPARQLDataGetter{
 
-  public String inputKey;
-  public String inputValue;
+  public String inputKey = new String("");
+  public String inputValue = new String("");
 
   public SubSPARQLDataGetter(VitroRequest vreq,  String selectVars, 
     String queryTriples, List<String> uris, List<String> literals, String inputKey){
