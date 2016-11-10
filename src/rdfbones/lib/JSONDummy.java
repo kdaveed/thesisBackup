@@ -34,7 +34,7 @@ public class JSONDummy {
 
     JSONObject assayType1 = obj("assayType1");
     assayType1.put("boneSegment", boneSegmentArray);
-    assayType1.put("meausurementDatum", meausurementDatumArray);
+    assayType1.put("measurementDatumType", meausurementDatumArray);
     
     JSONArray assayTypeArray = arr();
     assayTypeArray.put(assayType1);

@@ -1,6 +1,5 @@
 package rdfbones.rdfdataset;
 
-import rdfbones.formConfiguration.Node;
 
 public class MultiTriple extends Triple{
 

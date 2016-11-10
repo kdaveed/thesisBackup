@@ -9,8 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import rdfbones.formConfiguration.RDFDataConnector;
-import rdfbones.formconfig.GraphProcessor;
+import rdfbones.formProcessing.RDFDataConnector;
 import rdfbones.lib.ArrayLib;
 import rdfbones.lib.GraphLib;
 import vivoclasses.VitroRequest;
@@ -139,7 +138,7 @@ public class Graph {
     
     //System.out.println(tab + "DataRetriever Query : \n      " +  this.rdfDataConnector.dataRetriever.getQuery());
     if(this.rdfDataConnector.typeRetriever != null){
-      System.out.println(tab + "TypeRetriver Query :      " +  this.rdfDataConnector.typeRetriever.getQuery() + "\n");
+      System.out.println(tab + "TypeRetriver Query :      " +  this.rdfDataConnector.typeRetriever.getReadableQuery() + "\n");
     }
     int k = n + 1;
     System.out.println(tab + "Subgraphs :  " + subGraphs.keySet().size());

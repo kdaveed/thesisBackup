@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import rdfbones.rdfdataset.*;
+import rdfbones.rdfdataset.Triple;
 
 public class GraphLib {
 
@@ -201,6 +202,10 @@ public class GraphLib {
       if(triple instanceof RestrictionTriple){
         ArrayLib.addDistinct(classNodes, triple.subject.varName);
         ArrayLib.addDistinct(classNodes, triple.object.varName);
+      } else {
+        if(triple.predicate.equals("rdf:type")){
+          ArrayLib.addDistinct(classNodes, triple.object.varName);
+        }
       }
     }
     return classNodes;

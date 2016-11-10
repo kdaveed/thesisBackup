@@ -13,11 +13,11 @@ public class QueryUtils {
     List<Map<String, String>> result = new ArrayList<Map<String, String>>();
     Map<String, String> singleResult = new HashMap<String, String>();
     for(String uri : uris){
-      singleResult.put(uri, uri + (Math.random() * 1000));
+      singleResult.put(uri, uri);
     }
     if(literals != null){
       for(String literal : literals){
-        singleResult.put(literal, literal + (Math.random() * 1000));
+        singleResult.put(literal, literal);
       }
     }
 

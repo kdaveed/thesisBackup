@@ -5,14 +5,13 @@ import java.util.List;
 
 import org.json.JSONException;
 
-import rdfbones.formconfig.GraphProcessor;
+import rdfbones.formProcessing.GraphProcessor;
 import rdfbones.lib.JSONDummy;
+import rdfbones.lib.TripleSet;
 import rdfbones.rdfdataset.FormData;
 import rdfbones.rdfdataset.Graph;
 import rdfbones.rdfdataset.InputNode;
-import rdfbones.rdfdataset.LiteralTriple;
 import rdfbones.rdfdataset.MultiTriple;
-import rdfbones.rdfdataset.NewInstance;
 import rdfbones.rdfdataset.RestrictionTriple;
 import rdfbones.rdfdataset.ExistingInstance;
 import rdfbones.rdfdataset.Triple;
@@ -27,9 +26,11 @@ public class Main {
     //Test interface 
     VitroRequest vreq = new VitroRequest();
     mainGraph.init(vreq, getFormData());
-    mainGraph.debug(0);
+    //mainGraph.debug(0);
     String triplesToCreate = mainGraph.saveData(JSONDummy.getDummy1(), vreq);
-    System.out.println("Triples to create : \n" + triplesToCreate);
+    System.out.println(triplesToCreate);
+    TripleSet triples = new TripleSet(triplesToCreate);
+    triples.javaDebug();
   }
   
   static List<Triple> getTriples(){
@@ -52,25 +53,19 @@ public class Main {
     triple.add(new RestrictionTriple("subjectType", "obo:BFO_0000051", "studyDesignExecutionType"));
     triple.add(new Triple("studyDesingExecution", "rdf:type", "studyDesignExecutionType"));
     triple.add(new Triple("studyDesignExecutionType", "rdfs:subClassOf", "obo:OBI_0000471"));
-    
-    //Now I omit the form related restriction
     triple.add(new Triple("specimenCollectionProcess", "rdf:type", "specimenCollectionProcessType"));
     triple.add(new Triple("assay", "rdf:type", "assayType"));
     triple.add(new Triple("specimen", "rdf:type", "specimenType"));
-    
     triple.add(new Triple("specimenCollectionProcessType", "rdfs:subClassOf", "obo:OBI_0000659"));
     triple.add(new Triple("specimenType", "rdfs:subClassOf", "obo:OBI_0100051"));
-    
     triple.add(new Triple("measurementDatum", "rdf:type", "measurementDatumType"));
-
     triple.add(new RestrictionTriple("assayType", "obo:OBI_0000293", "specimenType"));
     triple.add(new RestrictionTriple("specimenCollectionProcessType", "obo:BFO_0000051", "specimenType"));
-
     return triple;
   }
   
   static FormData getFormData(){
-    
+  
     FormData formData = new FormData();
     FormData assayType = new FormData("assayType");
     FormData boneSegment = new FormData("boneSegment");
@@ -81,4 +76,5 @@ public class Main {
     formData.addSubformData("assay", assayType);
     return formData;
   } 
+
 }

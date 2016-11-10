@@ -44,8 +44,18 @@ public class SPARQLDataGetter {
     return query;
   }
   
+  public String getReadableQuery(){
+    String query = new String("SELECT ");
+    query += this.selectVars;
+    query += "\nWHERE { \n ";
+    query += this.getQueryTriples().replace(".", ".\n");
+    query += " } ";
+    return query;
+  }
+  
   String getQueryTriples(){
     return this.queryTriples;
   }
+  
   
 }
