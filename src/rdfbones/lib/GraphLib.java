@@ -16,6 +16,7 @@ public class GraphLib {
     return nodes;
   }
   
+  
   public static List<String> getNodes(List<Triple> triples){
     
     List<String> nodes = new ArrayList<String>();
