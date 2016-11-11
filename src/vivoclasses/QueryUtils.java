@@ -13,14 +13,14 @@ public class QueryUtils {
     List<Map<String, String>> result = new ArrayList<Map<String, String>>();
     Map<String, String> singleResult = new HashMap<String, String>();
     for(String uri : uris){
-      singleResult.put(uri, uri);
+      String rand = new String(uri + Double.toString(Math.random()*100000).substring(0, 4));
+      singleResult.put(uri, rand);
     }
     if(literals != null){
       for(String literal : literals){
         singleResult.put(literal, literal);
       }
     }
-
     result.add(singleResult);
     return result;
   }
