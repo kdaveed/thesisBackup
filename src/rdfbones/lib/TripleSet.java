@@ -15,10 +15,6 @@ public class TripleSet {
     String[] tripleArray = tripleString.split("\\.");
     for(int i = 0; i < tripleArray.length; i++){
       String[] triple = tripleArray[i].split("\t");
-      System.out.println(triple.length);
-      if(triple.length < 3){
-        System.out.println(tripleArray[i]);
-      }
       this.triples.add(new TripleStrings(triple[0], triple[1], triple[2]));
     }
   }

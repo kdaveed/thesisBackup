@@ -5,6 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class QueryUtils {
 
   public static List<Map<String, String>> getResult(String queryStr, List<String> uris, List<String> literals, VitroRequest vreq){
@@ -38,5 +42,18 @@ public class QueryUtils {
    */
   public static String subUriForQueryVar(String queryString, String varName, String uri) {
       return queryString.replaceAll("\\?" + varName + "\\b", "<" + uri + ">");
+  }
+  
+  public static JSONArray getJSON(List<Map<String, String>> results) throws JSONException{
+    
+    JSONArray resultArray = new JSONArray();
+    for(Map<String, String> result : results){
+      JSONObject jsonObject = new JSONObject();
+      for(String key : result.keySet()){
+        jsonObject.put(key, result.get(key));
+      }
+      resultArray.put(jsonObject);
+    }   
+    return resultArray;
   }
 }

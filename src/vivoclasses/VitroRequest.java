@@ -4,8 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import edu.cornell.mannlib.vitro.webapp.dao.DummyFactory;
+import edu.cornell.mannlib.vitro.webapp.dao.WebappDaoFactory;
+
 public class VitroRequest {
 
+  public WebappDaoFactory getWebappDaoFactory(){
+    return new DummyFactory();
+  }
   
   public String getParameter(String parameterName){
     
