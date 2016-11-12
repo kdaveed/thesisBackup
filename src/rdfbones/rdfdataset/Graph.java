@@ -11,15 +11,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.cornell.mannlib.vitro.webapp.controller.VitroRequest;
 import edu.cornell.mannlib.vitro.webapp.dao.InsertException;
+import edu.cornell.mannlib.vitro.webapp.dao.jena.QueryUtils;
 import edu.cornell.mannlib.vitro.webapp.edit.n3editing.VTwo.NewURIMaker;
 import rdfbones.lib.ArrayLib;
 import rdfbones.lib.GraphLib;
 import rdfbones.lib.SPARQLDataGetter;
 import rdfbones.lib.SPARQLUtils;
 import rdfbones.lib.SubSPARQLDataGetter;
-import vivoclasses.QueryUtils;
-import vivoclasses.VitroRequest;
 
 public class Graph {
 
@@ -63,6 +63,13 @@ public class Graph {
     // TODO Auto-generated constructor stub
   }
   
+  public void setNewUriMaker(NewURIMaker newUriMaker){
+    this.newUriMaker = newUriMaker;
+    for(String key : this.subGraphs.keySet()){
+      this.subGraphs.get(key).setNewUriMaker(newUriMaker);
+    }
+  }
+  
   public void initNodes(List<Triple> dataTriples, List<Triple> schemeTriples){
     
     this.dataTriples = dataTriples;
@@ -71,9 +78,8 @@ public class Graph {
     GraphLib.setDataRetrievalVars(this);
   }
   
-  public void init(VitroRequest vreq, NewURIMaker newUriMaker) throws JSONException{
+  public void init(VitroRequest vreq) throws JSONException{
    
-    this.newUriMaker = newUriMaker;
     this.dataRetriever = new SubSPARQLDataGetter(vreq, this.dataRetreivalQuery,  
         this.urisToSelect, this.literalsToSelect, this.inputNode);
     if(this.typeQueryTriples.size() > 0 && this.inputClasses.size() > 0){
@@ -83,8 +89,11 @@ public class Graph {
     //Subgraph initialisation
     for(String subGraphKey : this.subGraphs.keySet()){
       Graph subGraph = this.subGraphs.get(subGraphKey);
-      subGraph.init(vreq, newUriMaker);
+      subGraph.init(vreq);
     }
+  }
+  
+  public void getExistingData(VitroRequest vreq) throws JSONException{
     //This runs only at the main graph
     if(this.inputNode.equals("subject")){
       log.info("ObjectGetter");
@@ -118,16 +127,39 @@ public class Graph {
     }
   }
   
-  public String saveData(JSONObject inputObject, VitroRequest vreq, 
-    String key, String value) throws JSONException{
+  public String saveData(JSONObject inputObject, VitroRequest vreq) throws JSONException{
+    
     
     Map<String, String> variableMap = new HashMap<String, String>();
     this.setInstanceMap(inputObject, vreq, variableMap);
-    //this.setTypeMap(inputObject, vreq, variableMap);
     if(this.typeRetriever != null){
       List<Map<String, String>> data = this.typeRetriever.getData(variableMap.get(this.inputClasses.get(0)));
       variableMap.putAll(data.get(0));
     }
+    return generateN3(inputObject, vreq, variableMap);
+  }
+  
+  public Map<String, String> getVariableMap(JSONObject inputObject, VitroRequest vreq) throws JSONException{
+      
+      Map<String, String> variableMap = new HashMap<String, String>();
+      this.setInstanceMap(inputObject, vreq, variableMap);
+      //this.setTypeMap(inputObject, vreq, variableMap);
+      if(this.typeRetriever != null){
+        List<Map<String, String>> data = this.typeRetriever.getData(variableMap.get(this.inputClasses.get(0)));
+        variableMap.putAll(data.get(0));
+      }
+      return variableMap;
+  }
+  
+  
+  public String saveInitialData(JSONObject inputObject, VitroRequest vreq) throws JSONException{
+    return generateN3(inputObject, vreq, this.getVariableMap(inputObject, vreq));
+  }
+  
+  public String saveData(JSONObject inputObject, VitroRequest vreq, 
+    String key, String value) throws JSONException{
+    
+    Map<String, String> variableMap = this.getVariableMap(inputObject, vreq);
     variableMap.put(key, value);
     return generateN3(inputObject, vreq, variableMap);
   }

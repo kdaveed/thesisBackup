@@ -6,9 +6,10 @@ import java.util.Map;
 
 import org.json.JSONArray;
 
+import edu.cornell.mannlib.vitro.webapp.controller.VitroRequest;
+import edu.cornell.mannlib.vitro.webapp.dao.jena.QueryUtils;
 import rdfbones.rdfdataset.Triple;
-import vivoclasses.QueryUtils;
-import vivoclasses.VitroRequest;
+
 
 public class SPARQLDataGetter {
 

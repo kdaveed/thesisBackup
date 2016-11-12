@@ -5,8 +5,9 @@ import java.util.Map;
 
 import org.json.JSONArray;
 
+import edu.cornell.mannlib.vitro.webapp.controller.VitroRequest;
 import rdfbones.rdfdataset.Triple;
-import vivoclasses.VitroRequest;
+
 
 public class SubSPARQLDataGetter extends SPARQLDataGetter{
 

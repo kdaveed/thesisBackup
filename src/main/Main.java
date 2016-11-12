@@ -5,19 +5,18 @@ import java.util.List;
 
 import org.json.JSONException;
 
+import edu.cornell.mannlib.vitro.webapp.controller.VitroRequest;
 import edu.cornell.mannlib.vitro.webapp.dao.NewURIMakerVitro;
 import edu.cornell.mannlib.vitro.webapp.edit.n3editing.VTwo.NewURIMaker;
 import rdfbones.formProcessing.GraphProcessor;
 import rdfbones.lib.JSON;
 import rdfbones.lib.TripleSet;
-import rdfbones.rdfdataset.FormData;
 import rdfbones.rdfdataset.Graph;
 import rdfbones.rdfdataset.InputNode;
 import rdfbones.rdfdataset.MultiTriple;
 import rdfbones.rdfdataset.RestrictionTriple;
 import rdfbones.rdfdataset.ExistingInstance;
 import rdfbones.rdfdataset.Triple;
-import vivoclasses.VitroRequest;
 
 public class Main {
 
@@ -30,7 +29,7 @@ public class Main {
     NewURIMaker newUri = new NewURIMakerVitro(vreq.getWebappDaoFactory());
     mainGraph.init(vreq, newUri);
 
-    String triplesToCreate = mainGraph.saveData(JSON.getDummy1(), vreq, "subject", "subject5534321");
+    String triplesToCreate = mainGraph.saveInitialData(JSON.getDummy1(), vreq);
     //System.out.println(triplesToCreate);
     TripleSet triples = new TripleSet(triplesToCreate);
     triples.javaDebug();
