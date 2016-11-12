@@ -5,8 +5,10 @@ import java.util.List;
 
 import org.json.JSONException;
 
+import edu.cornell.mannlib.vitro.webapp.dao.NewURIMakerVitro;
+import edu.cornell.mannlib.vitro.webapp.edit.n3editing.VTwo.NewURIMaker;
 import rdfbones.formProcessing.GraphProcessor;
-import rdfbones.lib.JSONDummy;
+import rdfbones.lib.JSON;
 import rdfbones.lib.TripleSet;
 import rdfbones.rdfdataset.FormData;
 import rdfbones.rdfdataset.Graph;
@@ -21,32 +23,33 @@ public class Main {
 
   public static void main(String[] args) throws JSONException {
 
-    // TODO Auto-generated method stub
-    Graph mainGraph = GraphProcessor.getGraph(getTriples(), getRestrictionTriples(), "subject");
-    //Test interface 
+    Graph mainGraph = GraphProcessor.getGraph(getTriples(), getSchemeTriples(), "subject");
+    mainGraph.inputNode = "subject";
     VitroRequest vreq = new VitroRequest();
-    mainGraph.init(vreq, getFormData());
     //mainGraph.debug(0);
-    String triplesToCreate = mainGraph.saveData(JSONDummy.getDummy1(), vreq);
-    System.out.println(triplesToCreate);
+    NewURIMaker newUri = new NewURIMakerVitro(vreq.getWebappDaoFactory());
+    mainGraph.init(vreq, newUri);
+
+    String triplesToCreate = mainGraph.saveData(JSON.getDummy1(), vreq, "subject", "subject5534321");
+    //System.out.println(triplesToCreate);
     TripleSet triples = new TripleSet(triplesToCreate);
     triples.javaDebug();
   }
-  
+
   static List<Triple> getTriples(){
     
     List<Triple> triple = new ArrayList<Triple>();
-    triple.add(new MultiTriple(new InputNode("subject"), "obo:BFO_0000051", "studyDesingExecution"));
+    triple.add(new Triple(new InputNode("subject"), "obo:BFO_0000051", "studyDesingExecution"));
     triple.add(new MultiTriple("studyDesingExecution", "obo:BFO_0000051", "specimenCollectionProcess"));
-    triple.add(new MultiTriple("specimenCollectionProcess", "obo:OBI_0000293", new ExistingInstance("boneSegment")));
+    triple.add(new MultiTriple("specimenCollectionProcess", "obo:OBI_0000293", new InputNode("boneSegment")));
     triple.add(new Triple("specimenCollectionProcess", "obo:OBI_0000299", "specimen"));
     triple.add(new Triple("assay", "obo:OBI_0000293", "specimen"));
     triple.add(new MultiTriple("assay", "obo:OBI_0000299", "measurementDatum"));
-    triple.add(new Triple("measurementDatum", "obo:IAO_0000299", new ExistingInstance("categoricalLabel")));
+    triple.add(new Triple("measurementDatum", "obo:IAO_0000299", new InputNode("categoricalLabel")));
     return triple;
   }
   
-  static List<Triple> getRestrictionTriples(){
+  static List<Triple> getSchemeTriples(){
     
     List<Triple> triple = new ArrayList<Triple>();
     triple.add(new Triple(new InputNode("subject"), "rdf:type", "subjectType"));
@@ -54,27 +57,14 @@ public class Main {
     triple.add(new Triple("studyDesingExecution", "rdf:type", "studyDesignExecutionType"));
     triple.add(new Triple("studyDesignExecutionType", "rdfs:subClassOf", "obo:OBI_0000471"));
     triple.add(new Triple("specimenCollectionProcess", "rdf:type", "specimenCollectionProcessType"));
-    triple.add(new Triple("assay", "rdf:type", "assayType"));
+    triple.add(new Triple("assay", "rdf:type", new InputNode("assayType")));
     triple.add(new Triple("specimen", "rdf:type", "specimenType"));
     triple.add(new Triple("specimenCollectionProcessType", "rdfs:subClassOf", "obo:OBI_0000659"));
     triple.add(new Triple("specimenType", "rdfs:subClassOf", "obo:OBI_0100051"));
-    triple.add(new Triple("measurementDatum", "rdf:type", "measurementDatumType"));
-    triple.add(new RestrictionTriple("assayType", "obo:OBI_0000293", "specimenType"));
+    triple.add(new Triple("measurementDatum", "rdf:type", new InputNode("measurementDatumType")));
+    triple.add(new RestrictionTriple(new InputNode("assayType"), "obo:OBI_0000293", "specimenType"));
     triple.add(new RestrictionTriple("specimenCollectionProcessType", "obo:BFO_0000051", "specimenType"));
     return triple;
   }
-  
-  static FormData getFormData(){
-  
-    FormData formData = new FormData();
-    FormData assayType = new FormData("assayType");
-    FormData boneSegment = new FormData("boneSegment");
-    FormData measurementDatum = new FormData("measurementDatumType");
-    measurementDatum.setInputs("categoricalLabel");
-    assayType.addSubformData("boneSegment", boneSegment);
-    assayType.addSubformData("measurementDatumType", measurementDatum);
-    formData.addSubformData("assay", assayType);
-    return formData;
-  } 
 
 }

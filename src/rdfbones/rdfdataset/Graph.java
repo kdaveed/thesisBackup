@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -55,6 +57,8 @@ public class Graph {
   public SubSPARQLDataGetter typeRetriever;
   public NewURIMaker newUriMaker;
   
+  private static final Log log = LogFactory.getLog(Graph.class);
+
   public Graph() {
     // TODO Auto-generated constructor stub
   }
@@ -83,7 +87,7 @@ public class Graph {
     }
     //This runs only at the main graph
     if(this.inputNode.equals("subject")){
-      System.out.println("ObjectGetter");
+      log.info("ObjectGetter");
       if(vreq.getParameterMap().containsKey("objectUri") || true){ 
         //The existing data has to be queried
         getGraphData(vreq.getParameter("subject"));
@@ -176,32 +180,32 @@ public class Graph {
   public void debug(int n){
     
     String tab = new String(new char[n]).replace("\0", "\t");
-    System.out.println(tab + "InputNode : " + this.inputNode);
+    log.info(tab + "InputNode : " + this.inputNode);
 
-    System.out.println(tab + "DataTriples : " + ArrayLib.debugTriples(tab, this.dataTriples));
-    System.out.println(tab + "SchemeTriples : " + ArrayLib.debugTriples(tab, this.schemeTriples));
-    System.out.println(tab + "TriplesToStore : " + ArrayLib.debugTriples(tab, this.triplesToStore));
+    log.info(tab + "DataTriples : " + ArrayLib.debugTriples(tab, this.dataTriples));
+    log.info(tab + "SchemeTriples : " + ArrayLib.debugTriples(tab, this.schemeTriples));
+    log.info(tab + "TriplesToStore : " + ArrayLib.debugTriples(tab, this.triplesToStore));
     
-    System.out.println(tab + "newInstances :      " + ArrayLib.debugList(this.newInstances));
-    System.out.println(tab + "inputInstances :      " + ArrayLib.debugList(this.inputInstances));
-    System.out.println(tab + "constantLiterals :      " + ArrayLib.debugList(this.constantLiterals));
-    System.out.println(tab + "inputLiterals :      " + ArrayLib.debugList(this.inputLiterals));
-    System.out.println(tab + "inputClasses :      " + ArrayLib.debugList(this.inputClasses));
-    System.out.println(tab + "classesToSelect :      " + ArrayLib.debugList(this.classesToSelect));
-    System.out.println(tab + "typeQueryTriples :      " + ArrayLib.debugTriples(tab, this.typeQueryTriples));
+    log.info(tab + "newInstances :      " + ArrayLib.debugList(this.newInstances));
+    log.info(tab + "inputInstances :      " + ArrayLib.debugList(this.inputInstances));
+    log.info(tab + "constantLiterals :      " + ArrayLib.debugList(this.constantLiterals));
+    log.info(tab + "inputLiterals :      " + ArrayLib.debugList(this.inputLiterals));
+    log.info(tab + "inputClasses :      " + ArrayLib.debugList(this.inputClasses));
+    log.info(tab + "classesToSelect :      " + ArrayLib.debugList(this.classesToSelect));
+    log.info(tab + "typeQueryTriples :      " + ArrayLib.debugTriples(tab, this.typeQueryTriples));
     
     if(this.dataRetriever != null){
-      System.out.println(tab + "DataRetriever Query : \n      " +  this.dataRetriever.getReadableQuery());
+      log.info(tab + "DataRetriever Query : \n      " +  this.dataRetriever.getReadableQuery());
     }
     if(this.typeRetriever != null){
-      System.out.println(tab + "TypeRetriver Query :      " +  this.typeRetriever.getReadableQuery() + "\n");
+      log.info(tab + "TypeRetriver Query :      " +  this.typeRetriever.getReadableQuery() + "\n");
     }
     
     int k = n + 1;
-    System.out.println(tab + "Subgraphs :  " + subGraphs.keySet().size());
+    log.info(tab + "Subgraphs :  " + subGraphs.keySet().size());
     if(subGraphs.keySet().size() > 0){
       for(String key : subGraphs.keySet()){
-        System.out.println(tab + "Key : " + key);
+        log.info(tab + "Key : " + key);
         subGraphs.get(key).debug(k);
       }  
     }
