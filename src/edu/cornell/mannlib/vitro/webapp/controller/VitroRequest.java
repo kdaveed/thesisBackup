@@ -1,4 +1,4 @@
-package vivoclasses;
+package edu.cornell.mannlib.vitro.webapp.controller;
 
 import java.util.HashMap;
 import java.util.Map;

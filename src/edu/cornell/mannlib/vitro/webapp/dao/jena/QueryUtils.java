@@ -1,4 +1,4 @@
-package vivoclasses;
+package edu.cornell.mannlib.vitro.webapp.dao.jena;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +8,8 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import edu.cornell.mannlib.vitro.webapp.controller.VitroRequest;
 
 public class QueryUtils {
 
