@@ -7,6 +7,7 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.openjena.atlas.logging.Log;
 
 import edu.cornell.mannlib.vitro.webapp.dao.jena.QueryUtils;
 import rdfbones.lib.ArrayLib;
@@ -80,6 +81,7 @@ public class Graph {
             this.literalsToSelect, this.inputNode);
     if (this.typeQueryTriples.size() > 0 && this.inputClasses.size() > 0
         && this.classesToSelect.size() > 0) {
+      this.webapp.log("Graph.java 84 : typeRetriever");
       this.typeRetriever =
           new SubSPARQLDataGetter(webapp, this.typeQueryTriples, this.classesToSelect,
               null, this.inputClasses.get(0));
@@ -130,7 +132,8 @@ public class Graph {
     Map<String, String> variableMap = new HashMap<String, String>();
     this.setInstanceMap(inputObject, variableMap);
     if (this.typeRetriever != null) {
-      this.webapp.log("TypeRetriever");
+      this.webapp.log("Graph.java 135 : TypeRetriever is performed");
+      this.webapp.log("Graph.java 135 : inputClass.get(0) : " + this.inputClasses.get(0));
       List<Map<String, String>> data =
           this.typeRetriever.getData(variableMap.get(this.inputClasses.get(0)));
       variableMap.putAll(data.get(0));
@@ -181,6 +184,7 @@ public class Graph {
     for (String inputLiterals : this.inputLiterals) {
       instanceMap.put(inputLiterals, JSON.string(obj, inputLiterals));
     }
+    this.webapp.log("Graph.java 186 : " + instanceMap.toString());
   }
 
   public String generateN3(JSONObject inputObject, Map<String, String> variableMap) {
