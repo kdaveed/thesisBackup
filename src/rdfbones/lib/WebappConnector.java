@@ -12,7 +12,7 @@ import edu.cornell.mannlib.vitro.webapp.dao.jena.QueryUtils;
 public class WebappConnector {
 
   public Map<String, Object> requestMap = new HashMap<String, Object>();
-  public boolean logEnabled = true;
+  boolean logEnabled = true;
   
   public WebappConnector(){
     
@@ -37,6 +37,8 @@ public class WebappConnector {
   
   public List<Map<String, String>> sparqlResult(String queryStr, List<String> uris, List<String> literals){
     
+    System.out.println("uris : " + ArrayLib.debugList(uris));
+    System.out.println("literals" + ArrayLib.debugList(literals));
     return QueryUtils.getResult(queryStr, uris, literals);
   }
   

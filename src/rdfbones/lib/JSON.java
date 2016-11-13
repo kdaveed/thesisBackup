@@ -33,7 +33,7 @@ public class JSON {
     
     JSONArray specimenCollectionProcessArray = new JSONArray();
     JSONObject specimenCollectionProcess = new JSONObject();
-    specimenCollectionProcess.put("assayType", "assayType1");
+    specimenCollectionProcess.put("assayType", "http://w3id.org/rdfbones/extensions/FrSexEst#Assay.ExternalOccipitalProtuberance");
     specimenCollectionProcess.put("measurementDatum", measurementDatum);
     specimenCollectionProcess.put("boneSegment", boneSegment);
 
@@ -63,13 +63,49 @@ public class JSON {
     return obj().put("uri", varName);
   }
   
-  public static String getString(JSONObject obj, String key) throws JSONException{
+  public static String string(JSONObject obj, String key){
     
     if(obj.has(key)){
-      return obj.getString(key);
-    } else {
-      return new String("");
-    }
+      try {
+        return obj.getString(key);
+      } catch (JSONException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    } 
+    return new String("");
   }
  
+  public static JSONObject object(JSONObject obj, String key){
+    if(obj.has(key)){
+      try {
+        return obj.getJSONObject(key);
+      } catch (JSONException e) {
+        e.printStackTrace();
+      }
+    }
+    return new JSONObject();
+  }
+  
+  public static JSONObject object(JSONArray obj, int index){
+    
+    try {
+      return obj.getJSONObject(index);
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+    return new JSONObject();
+  }
+  
+  public static JSONArray array(JSONObject obj, String key){
+    if(obj.has(key)){
+      try {
+        return obj.getJSONArray(key);
+      } catch (JSONException e) {
+        e.printStackTrace();
+      }
+    }
+    return new JSONArray();
+  }
+  
 }

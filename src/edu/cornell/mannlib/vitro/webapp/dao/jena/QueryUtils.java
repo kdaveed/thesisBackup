@@ -9,11 +9,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.cornell.mannlib.vitro.webapp.controller.VitroRequest;
-
 public class QueryUtils {
 
-  public static List<Map<String, String>> getResult(String queryStr, List<String> uris, List<String> literals, VitroRequest vreq){
+  public static List<Map<String, String>> getResult(String queryStr, List<String> uris, List<String> literals){
     
     //Generating dummy data
     List<Map<String, String>> result = new ArrayList<Map<String, String>>();
@@ -46,13 +44,18 @@ public class QueryUtils {
       return queryString.replaceAll("\\?" + varName + "\\b", "<" + uri + ">");
   }
   
-  public static JSONArray getJSON(List<Map<String, String>> results) throws JSONException{
+  public static JSONArray getJSON(List<Map<String, String>> results){
     
     JSONArray resultArray = new JSONArray();
     for(Map<String, String> result : results){
       JSONObject jsonObject = new JSONObject();
       for(String key : result.keySet()){
-        jsonObject.put(key, result.get(key));
+        try {
+          jsonObject.put(key, result.get(key));
+        } catch (JSONException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
       }
       resultArray.put(jsonObject);
     }   
