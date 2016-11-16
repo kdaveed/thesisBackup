@@ -1,31 +1,27 @@
-package rdfbones.lib;
+package webappconnector;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.commons.logging.Log;
-
+import rdfbones.formProcessing.WebappConnector;
+import rdfbones.lib.ArrayLib;
 import edu.cornell.mannlib.vitro.webapp.dao.jena.QueryUtils;
 
-public class WebappConnector {
+public class PlainJavaWebappConnector implements WebappConnector{
 
   public Map<String, Object> requestMap = new HashMap<String, Object>();
   boolean logEnabled = true;
   
-  public WebappConnector(){
+  public PlainJavaWebappConnector(){
     
   }
   
-  public WebappConnector(boolean log){
+  public PlainJavaWebappConnector(boolean log){
     this.logEnabled = log;
   }
-  
-  public String getUnusedNewURI(){
-    return new String(UUID.randomUUID().toString().substring(0, 2));
-  }
-  
+
   public String getInputParameter(String parameterName){
     
     if(this.requestMap.containsKey(parameterName)){
@@ -48,4 +44,9 @@ public class WebappConnector {
       System.out.println(msg);
     }
   }
+
+  public String getUnusedURI() {
+    return new String(UUID.randomUUID().toString().substring(0, 2));
+  }
+
 }

@@ -3,6 +3,9 @@ package rdfbones.lib;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import edu.cornell.mannlib.vitro.webapp.dao.jena.N3Utils;
+import rdfbones.rdfdataset.Graph;
 import rdfbones.rdfdataset.Triple;
 
 public class SPARQLDataGetter {
@@ -12,12 +15,14 @@ public class SPARQLDataGetter {
   String query;
   List<String> urisToSelect;
   List<String> literalsToSelect;
-  WebappConnector webapp;
+  String subject;
+  String object;
+  public Graph mainGraph;
 
-  public SPARQLDataGetter(WebappConnector webapp, List<Triple> queryTriples,
+  public SPARQLDataGetter(Graph mainGraph, List<Triple> queryTriples,
       List<String> uris, List<String> literals) {
 
-    this.webapp = webapp;
+    this.mainGraph = mainGraph;
     if (literals == null) {
       literals = new ArrayList<String>();
     }
@@ -30,13 +35,20 @@ public class SPARQLDataGetter {
   public List<Map<String, String>> getData() {
 
     String query = this.getQuery();
-    this.webapp.log(query + "\n\n");
-    return this.webapp.sparqlResult(query, this.urisToSelect, this.literalsToSelect);
+    this.mainGraph.getWebapp().log(query + "\n\n");
+    return mainGraph.getWebapp().sparqlResult(query, this.urisToSelect, this.literalsToSelect);
   }
 
-  public String getQuery() {
+  public List<Map<String, String>> getData(String value) {
 
-    String query = new String("SELECT ");
+    return this.getData();
+  }
+
+  
+  public String getQuery() {
+    String query = new String("");
+    query += N3Utils.getQueryPrefixes();
+    query += "\nSELECT ";
     query += this.selectVars;
     query += "\nWHERE { \n ";
     query += this.getQueryTriples();
