@@ -43,6 +43,38 @@ public class GraphLib {
     }
   }
   
+  public static RDFNode getSubjectNode(Triple triple, String varName){
+    
+    if(triple.subject.varName.equals(varName)){
+      return triple.subject;
+    } else {
+      return triple.object;
+    }
+  }
+  
+  public static RDFNode getObjectNode(Triple triple, String varName){
+    
+    if(triple.subject.varName.equals(varName)){
+      return triple.object;
+    } else {
+      return triple.subject;
+    }
+  }
+  
+
+  public static List<Triple> getNotRestrictionTriples(List<Triple> triples, String node){
+    
+    List<Triple> toReturn = new ArrayList<Triple>();
+    for (Triple triple : triples) {
+      if (triple.subject.varName.equals(node) || triple.object.varName.equals(node)) {
+        if(!(triple instanceof RestrictionTriple)){
+          toReturn.add(triple);
+        }
+      }
+    }
+    return toReturn;
+  }
+  
   public static List<String> getObjectNodes(List<Triple> triples){
    
     List<String> object = new ArrayList<String>();

@@ -15,7 +15,7 @@ import rdfbones.lib.JSON;
 import rdfbones.lib.MainGraphSPARQLDataGetter;
 import rdfbones.lib.SPARQLDataGetter;
 import rdfbones.lib.SPARQLUtils;
-import rdfbones.lib.SubSPARQLDataGetter;
+import rdfbones.lib.VariableDependency;
 import rdfbones.formProcessing.WebappConnector;
 
 public class Graph {
@@ -47,12 +47,14 @@ public class Graph {
   public Map<String, Graph> subGraphs = new HashMap<String, Graph>();
   public Map<String, Graph> optionalSubGraphs = new HashMap<String, Graph>();
 
+  public Map<String, VariableDependency> variableDependencies = 
+      new HashMap<String, VariableDependency>();
   public JSONArray existingData = new JSONArray();
   public Map<String, String> existingTriples;
   public Map<String, String> graphDataMap;
 
   public SPARQLDataGetter dataRetriever;
-  public SubSPARQLDataGetter typeRetriever;
+  public SPARQLDataGetter typeRetriever;
   WebappConnector webapp;
   Graph mainGraph;
   
@@ -63,7 +65,7 @@ public class Graph {
   public void setWebapp(WebappConnector webapp) {
     this.webapp = webapp;
   }
-  
+
   public Graph() {
     // TODO Auto-generated constructor stub
   }
@@ -89,13 +91,13 @@ public class Graph {
               this.literalsToSelect);
     } else {
       this.dataRetriever =
-          new SubSPARQLDataGetter(mainGraph, this.dataRetreivalQuery, this.urisToSelect,
+          new SPARQLDataGetter(mainGraph, this.dataRetreivalQuery, this.urisToSelect,
               this.literalsToSelect, this.inputNode);
     }
     if (this.typeQueryTriples.size() > 0 && this.inputClasses.size() > 0
         && this.classesToSelect.size() > 0) {
       this.typeRetriever =
-          new SubSPARQLDataGetter(mainGraph, this.typeQueryTriples, this.classesToSelect,
+          new SPARQLDataGetter(mainGraph, this.typeQueryTriples, this.classesToSelect,
               null, this.inputClasses.get(0));
     }
     // Subgraph initialisation
@@ -108,7 +110,6 @@ public class Graph {
   /*
    * Data Retrieval
    */
-  
   public void getExistingData(String subject, String object) {
     
     this.existingData = QueryUtils.getJSON(
@@ -245,12 +246,12 @@ public class Graph {
 
     if (this.dataRetriever != null) {
       this.mainGraph.getWebapp().log(tab + "DataRetriever Query : \n      "
-          + this.dataRetriever.getReadableQuery());
+          + this.dataRetriever.getQuery());
     }
     
     if (this.typeRetriever != null) {
       this.mainGraph.getWebapp().log(tab + "TypeRetriver Query :      "
-          + this.typeRetriever.getReadableQuery() + "\n");
+          + this.typeRetriever.getQuery() + "\n");
     }
 
     int k = n + 1;
