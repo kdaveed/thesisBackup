@@ -22,8 +22,7 @@ public class Main {
     //System.out.println(triplesToCreate);
     //mainGraph.debug(0);
     //mainGraph.getExistingData("subjectURI", "objectURI");
-    DependencyCalculator.calculate(mainGraph, TripleLib.sdeSchemeTriples(), TripleLib.sdeForm(), 
-        ArrayLib.getList("subject"));
+    DependencyCalculator.calculate(mainGraph, TripleLib.sdeSchemeTriples(), TripleLib.sdeForm());
     //Debug dependencies
     for(String dependencyKey : mainGraph.variableDependencies.keySet()){
       System.out.println(dependencyKey);

@@ -52,6 +52,7 @@ public class SPARQLDataGetter {
     if (literals == null) {
       literals = new ArrayList<String>();
     }
+    GraphLib.incrementRestrictionTriples(queryTriples);
     this.selectVars = SPARQLUtils.assembleSelectVars(uris, literals);
     this.queryTriples = SPARQLUtils.assembleQueryTriples(queryTriples);
     this.urisToSelect = uris;
@@ -82,7 +83,7 @@ public class SPARQLDataGetter {
     String queryTriples = this.queryTriples;
     int i = 0;
     for(String inputKey : this.inputKeys){
-      queryTriples += "\nFILTER ( ?" + inputKey + " = <" + this.inputValues.get(i) + "> ) . ";  
+      queryTriples += "\tFILTER ( ?" + inputKey + " = <" + this.inputValues.get(i) + "> ) . ";  
       i++;
     }
     return queryTriples;
@@ -95,7 +96,7 @@ public class SPARQLDataGetter {
     query += this.selectVars;
     query += "\nWHERE { \n ";
     query += this.getQueryTriples();
-    query += " } ";
+    query += "\n } ";
     return query;
   }
 }

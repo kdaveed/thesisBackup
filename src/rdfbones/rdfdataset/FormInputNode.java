@@ -1,12 +1,10 @@
 package rdfbones.rdfdataset;
 
+public class FormInputNode extends InputNode {
 
-public class ExistingInstance extends InputNode {
-
-  public ExistingInstance(String varName) {
+  public FormInputNode(String varName) {
     super(varName);
     // TODO Auto-generated constructor stub
   }
 
-  
 }

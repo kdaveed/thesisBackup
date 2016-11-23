@@ -326,4 +326,38 @@ public class GraphLib {
     }
   }
     
+  public static List<String> getMainInputVars(List<Triple> triples){
+    List<String> mainInputVars = new ArrayList<String>();
+    for(Triple triple : triples){
+      if(triple.subject instanceof MainInputNode){
+        mainInputVars.add(triple.subject.varName);
+      }
+      if(triple.object instanceof MainInputNode){
+        mainInputVars.add(triple.object.varName);
+      }
+    }
+    return mainInputVars;
+  }
+  
+  public static void incrementRestrictionTriples(List<Triple> triples){
+    
+    int i = 0;
+    for(Triple triple : triples){
+      if(triple instanceof RestrictionTriple){
+        ((RestrictionTriple) triple).i = i;
+        i++;
+      }
+    } 
+  }
+  
+  public static List<Triple> getSubclassTriples(String input, List<Triple> triples){
+    List<Triple> subClassTriples = new ArrayList<Triple>();
+    for(Triple triple : triples){
+      if(triple.predicate.equals("rdfs:subClassOf") && 
+           triple.subject.varName.equals(input)){
+        subClassTriples.add(triple);
+      }
+    }
+    return subClassTriples;
+  }
 }

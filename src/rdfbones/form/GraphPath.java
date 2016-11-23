@@ -3,9 +3,8 @@ package rdfbones.form;
 import java.util.ArrayList;
 import java.util.List;
 
-import rdfbones.lib.ArrayLib;
 import rdfbones.lib.GraphLib;
-import rdfbones.rdfdataset.RDFNode;
+import rdfbones.rdfdataset.Constant;
 import rdfbones.rdfdataset.Triple;
 
 public class GraphPath {
@@ -19,6 +18,10 @@ public class GraphPath {
    
   }
   
+  public GraphPath(String input){
+    this.input = input;
+  }
+  
   public GraphPath(Triple triple){
     triples.add(triple);
   }
@@ -28,14 +31,6 @@ public class GraphPath {
       this.triples.addAll(path.triples);
     }
     return triples;
-  }
-  
-  
-  public void setInputs(List<String> inputs){
-    this.inputs = inputs;
-    for(GraphPath path : this.subPaths){
-      path.setInputs(inputs);
-    }
   }
   
   public String debugValid(){
@@ -63,16 +58,24 @@ public class GraphPath {
   
   public boolean validate(List<String> inputs, List<Triple> triples){
     
+    //getInput(triples);
     List<String> nodes = GraphLib.getNodes(this.triples);
     //System.out.println("Nodes : " + ArrayLib.debugList(nodes));
     for(String node : nodes){
-      List<Triple> otherTriples = GraphLib.getNotRestrictionTriples(triples, node);
-      for(Triple triple : otherTriples){
-        if(inputs.contains(GraphLib.getObject(triple, node))){
-          //System.out.println("Found : " + GraphLib.getObject(triple, node));
-          this.valid = true;
-          this.inputs.add(GraphLib.getObject(triple, node));
-          this.triples.add(triple);
+      if(inputs.contains(node)){
+        this.valid = true;
+        this.inputs.add(node);
+      } else {
+        List<Triple> otherTriples = GraphLib.getNotRestrictionTriples(triples, node);
+        for(Triple triple : otherTriples){
+          if(inputs.contains(GraphLib.getObject(triple, node))){
+            //System.out.println("Found : " + GraphLib.getObject(triple, node));
+            this.valid = true;
+            this.inputs.add(GraphLib.getObject(triple, node));
+            this.triples.add(triple);
+          } else if(GraphLib.getObjectNode(triple, node) instanceof Constant){
+            this.triples.add(triple);
+          }
         }
       }
     }
@@ -85,6 +88,12 @@ public class GraphPath {
       } 
     }
     return this.valid;
+  }
+  
+  void getInput(List<Triple> triples){
+    if(this.input != null){
+      this.triples.addAll(GraphLib.getSubclassTriples(this.input, triples));
+    }
   }
 }
 
