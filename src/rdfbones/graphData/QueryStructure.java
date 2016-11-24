@@ -19,7 +19,7 @@ public class QueryStructure {
   QueryStructure subQuery;
   List<String> queries = new ArrayList<String>();
   String query;
-
+  
   public QueryStructure(List<Triple> triples, String startNode) {
 
     this.inputNode = startNode;

@@ -12,6 +12,7 @@ import rdfbones.rdfdataset.Constant;
 import rdfbones.rdfdataset.ExistingInstance;
 import rdfbones.rdfdataset.ExistingRestrictionTriple;
 import rdfbones.rdfdataset.FormInputNode;
+import rdfbones.rdfdataset.GreedyRestrictionTriple;
 import rdfbones.rdfdataset.InputNode;
 import rdfbones.rdfdataset.MainInputNode;
 import rdfbones.rdfdataset.MultiTriple;
@@ -76,6 +77,25 @@ public class TripleLib {
     return triple;
   }
 
+  public static List<Triple> greedy1() {
+
+    List<Triple> triple = new ArrayList<Triple>();
+    triple.add(new RestrictionTriple("aaaa", "obo:BFO_0000051",  "bbbb"));
+    //triple.add(new GreedyRestrictionTriple("bbbb", "obo:BFO_0000051", "cccc"));
+    triple.add(new RestrictionTriple("bbbb", "obo:BFO_0000051", "cccc"));
+    triple.add(new Triple("bbbb", "rdfs:subClassOf", "anyCcc"));
+    return triple;
+  }
+
+  public static List<Triple> greedy2() {
+
+    List<Triple> triple = new ArrayList<Triple>();
+    triple.add(new GreedyRestrictionTriple("a1", "obo:BFO_0000051", "b1"));
+    triple.add(new GreedyRestrictionTriple("b1", "obo:BFO_0000051", "c1"));
+    triple.add(new Triple("b1", "rdfs:subClassOf", "c2"));
+    return triple;
+  }
+  
   public static Form sdeForm() {
 
     Form measDatumSubForm = new Form();

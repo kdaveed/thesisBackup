@@ -4,6 +4,7 @@ import org.json.JSONException;
 
 import rdfbones.formProcessing.DependencyCalculator;
 import rdfbones.formProcessing.GraphProcessor;
+import rdfbones.graphData.QueryStructure;
 import rdfbones.lib.ArrayLib;
 import rdfbones.lib.SPARQLDataGetter;
 import rdfbones.lib.TripleLib;
@@ -14,6 +15,7 @@ public class Main {
 
   public static void main(String[] args) throws JSONException {
 
+    /*
     Graph mainGraph =
         GraphProcessor.getGraph(TripleLib.sdeDataTiples(), TripleLib.sdeSchemeTriples(),
             "subject");
@@ -29,5 +31,9 @@ public class Main {
       SPARQLDataGetter dataGetter = mainGraph.variableDependencies.get(dependencyKey).dataGetter;
       System.out.println(dataGetter.getQuery());
     }
+    */
+    QueryStructure qs = new QueryStructure(TripleLib.greedy2(), "a1");
+    System.out.println(qs.getQuery());
+   
   }
 }

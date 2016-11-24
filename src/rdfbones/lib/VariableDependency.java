@@ -2,7 +2,7 @@ package rdfbones.lib;
 
 import java.util.List;
 
-import rdfbones.form.GraphPath;
+import rdfbones.graphData.GraphPath;
 import rdfbones.rdfdataset.Graph;
 import rdfbones.rdfdataset.OptionalTriple;
 import rdfbones.rdfdataset.Triple;

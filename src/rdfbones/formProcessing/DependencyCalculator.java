@@ -5,8 +5,8 @@ import java.util.List;
 
 import rdfbones.form.Form;
 import rdfbones.form.FormElement;
-import rdfbones.form.GraphPath;
 import rdfbones.form.SubformAdder;
+import rdfbones.graphData.GraphPath;
 import rdfbones.lib.ArrayLib;
 import rdfbones.lib.GraphLib;
 import rdfbones.lib.TripleLib;
