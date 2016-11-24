@@ -1,4 +1,4 @@
-package rdfbones.form;
+package rdfbones.graphData;
 
 import java.util.ArrayList;
 import java.util.List;
