@@ -1,6 +1,7 @@
 package rdfbones.formProcessing;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import rdfbones.form.Form;
@@ -13,6 +14,7 @@ import rdfbones.lib.TripleLib;
 import rdfbones.lib.VariableDependency;
 import rdfbones.rdfdataset.ExistingRestrictionTriple;
 import rdfbones.rdfdataset.Graph;
+import rdfbones.rdfdataset.GreedyRestrictionTriple;
 import rdfbones.rdfdataset.RestrictionTriple;
 import rdfbones.rdfdataset.Triple;
 
@@ -30,31 +32,34 @@ public class DependencyCalculator {
     if (form == null) {
       return;
     }
-    System.out.println("InputVariables");
-    System.out.println(ArrayLib.debugList(inputVariables));
     for (FormElement element : form.formElements) {
-      List<Triple> copy = new ArrayList<Triple>();
+      List<Triple> copy = new ArrayList<Triple>(triples.size());
       copy.addAll(triples);
-      System.out.println("\nNode name : " + element.node.varName + "\n");
+      
+      String node = element.node.varName;
+      if(element instanceof SubformAdder){
+        if(((SubformAdder) element).dataKey != null){
+          node = (((SubformAdder) element).dataKey);
+        }
+      }
+      //System.out.println("DebugTriples :" + ArrayLib.debugTriples("", copy));
+      System.out.println("Node name : " + node + "\n");
+      
       GraphPath graphPath =
-          getGraphPath(new GraphPath(), copy, inputVariables, element.node.varName);
-      System.out.println("Debug" );
-      System.out.println(graphPath.debug());
-      graphPath.validate(inputVariables, TripleLib.sdeSchemeTriples());
+          getGraphPath(new GraphPath(), copy, inputVariables, node);
+      graphPath.validate(inputVariables, copy);
+      
       //System.out.println("Valid Debug" );
       //System.out.println(graphPath.debugValid());
-      graph.variableDependencies.put(element.node.varName, new VariableDependency(graph,
-          graphPath, element.node.varName));
-      inputVariables.add(element.node.varName);
+      
+      graph.variableDependencies.put(node, new VariableDependency(graph,
+          graphPath, node)); 
+      inputVariables.add(node);
     }
     // Do the iteration for the subforms
     for (FormElement element : form.formElements) {
       if (element instanceof SubformAdder) {
-        List<Triple> copy = new ArrayList<Triple>();
-        copy.addAll(triples);
-        System.out.println("SecondCalculate. Inputs : "
-            + ArrayLib.debugList(inputVariables));
-        calculate(graph, copy, ((SubformAdder) element).subForm, inputVariables);
+        calculate(graph, triples, ((SubformAdder) element).subForm, inputVariables);
       }
     }
   }
@@ -85,7 +90,7 @@ public class DependencyCalculator {
         if ((triple instanceof RestrictionTriple) || (triple instanceof ExistingRestrictionTriple)) {
           nums.add(i);
           toReturn.add(triple);
-        }
+        } 
       }
       i++;
     }

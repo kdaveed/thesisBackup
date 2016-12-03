@@ -25,9 +25,9 @@ public class QueryStructure {
     this.inputNode = startNode;
     Triple triple = GraphLib.isGreedy(triples, startNode);
     if (triple != null) {
-      System.out.println("Greedy : " + startNode);
       this.greedy = true;
     } else {
+      System.out.println("False");
       this.greedy = false;
     }
     this.setTriples(triples, startNode);
@@ -72,7 +72,6 @@ public class QueryStructure {
     this.baseTriples = unionForm.triples;
     this.query = GraphLib.assembleTriples(this.baseTriples);
     if(unionForm.greedyNode != null){
-      System.out.println("Subquery is set");
       this.greedyOut = unionForm.greedyNode;
       this.subQuery = new QueryStructure(triples, this.greedyOut, true);
     }

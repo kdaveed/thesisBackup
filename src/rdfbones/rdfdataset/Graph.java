@@ -1,5 +1,6 @@
 package rdfbones.rdfdataset;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import org.json.JSONObject;
 
 import edu.cornell.mannlib.vitro.webapp.dao.jena.QueryUtils;
 import rdfbones.lib.ArrayLib;
+import rdfbones.lib.DebugLib;
 import rdfbones.lib.GraphLib;
 import rdfbones.lib.JSON;
 import rdfbones.lib.MainGraphSPARQLDataGetter;
@@ -17,14 +19,16 @@ import rdfbones.lib.SPARQLDataGetter;
 import rdfbones.lib.SPARQLUtils;
 import rdfbones.lib.VariableDependency;
 import rdfbones.formProcessing.WebappConnector;
+import rdfbones.graphData.RDFGraph;
 
 public class Graph {
 
   // Input
   public String inputNode;
-
+  public Triple triple = null;
+  
   // Triples
-  public List<Triple> dataTriples;
+  public List<Triple> dataTriples = new ArrayList<Triple>();
   public List<Triple> schemeTriples;
 
   // Data Input - Storage
@@ -43,7 +47,7 @@ public class Graph {
   public List<String> urisToSelect;
   public List<String> literalsToSelect;
 
-  // Type retriever query
+  public Map<RDFNode, Graph> map;
   public Map<String, Graph> subGraphs = new HashMap<String, Graph>();
   public Map<String, Graph> optionalSubGraphs = new HashMap<String, Graph>();
 
@@ -56,7 +60,66 @@ public class Graph {
   public SPARQLDataGetter dataRetriever;
   public SPARQLDataGetter typeRetriever;
   WebappConnector webapp;
-  Graph mainGraph;
+  public Graph mainGraph;
+  
+  public Graph(Triple triple, String node, List<Triple> triples){
+    
+    this.triple = triple;
+    this.init(GraphLib.getObject(triple, node), triples);
+  }
+  
+  public Graph(String node, List<Triple> triples, List<Triple> schemeTriples){
+    
+    this.inputNode = node;
+    this.init(node, triples);
+    this.initGraph();
+    this.initSchemeTriples(schemeTriples);
+  }
+ 
+  public Graph() {
+    // TODO Auto-generated constructor stub
+  }
+  
+  public void init(String nodeName, List<Triple> triples){
+    
+    this.map = new HashMap<RDFNode, Graph>();
+    List<Triple> neighbours = GraphLib.getAndRemoveTriples(triples, nodeName);
+    for(Triple triple : neighbours){
+      RDFNode node = GraphLib.getObjectNode(triple, nodeName);
+      map.put(node, new Graph(triple, nodeName, triples));
+    }
+  }
+
+  public void initGraph(){
+    this.initGraphMap(this);
+  }
+  
+  public void initGraphMap(Graph graph){
+    
+    for(RDFNode key : this.map.keySet()){
+      Graph subGraph = this.map.get(key);
+      Triple triple = subGraph.triple;
+      if(triple instanceof MultiTriple){
+        subGraph.inputNode = GraphLib.getObject(triple, key.varName);
+        subGraph.initGraph();
+        if(subGraph.triple != null) subGraph.dataTriples.add(triple);
+        this.subGraphs.put(triple.predicate, subGraph);
+      } else {
+        graph.dataTriples.add(triple);
+        subGraph.initGraphMap(graph);
+      }
+    }
+  }
+  
+  public void initSchemeTriples(List<Triple> schemeTriples){
+    
+    this.schemeTriples = GraphLib.getSchemeTriples(this.dataTriples, schemeTriples);  
+    GraphLib.setDataInputVars(this);
+    GraphLib.setDataRetrievalVars(this);
+    for(String key : this.subGraphs.keySet()){
+      this.subGraphs.get(key).initSchemeTriples(schemeTriples);
+    }
+  }
   
   public WebappConnector getWebapp() {
     return webapp;
@@ -65,23 +128,12 @@ public class Graph {
   public void setWebapp(WebappConnector webapp) {
     this.webapp = webapp;
   }
-
-  public Graph() {
-    // TODO Auto-generated constructor stub
-  }
-
-  public void initNodes(List<Triple> dataTriples, List<Triple> schemeTriples) {
-
-    this.dataTriples = dataTriples;
-    this.schemeTriples = GraphLib.getSchemeTriples(dataTriples, schemeTriples);
-    GraphLib.setDataInputVars(this);
-    GraphLib.setDataRetrievalVars(this);
-  }
   
   public void init(WebappConnector webapp) {
     this.webapp = webapp;
     init(this);
   }
+  
   public void init(Graph mainGraph) {
 
     this.mainGraph = mainGraph;
@@ -98,7 +150,7 @@ public class Graph {
         && this.classesToSelect.size() > 0) {
       this.typeRetriever =
           new SPARQLDataGetter(mainGraph, this.typeQueryTriples, this.classesToSelect,
-              null, this.inputClasses.get(0));
+              null, this.inputClasses);
     }
     // Subgraph initialisation
     for (String subGraphKey : this.subGraphs.keySet()) {
@@ -112,6 +164,7 @@ public class Graph {
    */
   public void getExistingData(String subject, String object) {
     
+    log("DataRetriever Query : \n      " + this.dataRetriever.getQuery());
     this.existingData = QueryUtils.getJSON(
         ((MainGraphSPARQLDataGetter)this.dataRetriever).getData(subject, object));
     this.getSubGraphData();
@@ -126,14 +179,11 @@ public class Graph {
 
   private void getSubGraphData() {
     for (int i = 0; i < this.existingData.length(); i++) {
-      log("Graph.java 127 " + i); 
       for (String key : this.subGraphs.keySet()) {
-        log("Graph.java 128 - key : " + key); 
         Graph subGraph = this.subGraphs.get(key);
         try {
           JSONObject object = JSON.object(this.existingData, i);
           String initialValue = JSON.string(object, subGraph.inputNode);
-          log("Graph.java 133 : " + initialValue); 
           object.put(key, subGraph.getGraphData(initialValue));
         } catch (JSONException e) {
           log("Unsuccesful");
@@ -216,52 +266,36 @@ public class Graph {
     }
     return triplesToStore;
   }
-
+  
+  public void debug(){
+    this.debug(0);
+  }
+  
   public void debug(int n) {
-
-    String tab = new String(new char[n]).replace("\0", "\t");
-    this.mainGraph.getWebapp().log(tab + "InputNode : " + this.inputNode);
-
-    this.mainGraph.getWebapp().log(tab + "DataTriples : "
-        + ArrayLib.debugTriples(tab, this.dataTriples));
-    this.mainGraph.getWebapp().log(tab + "SchemeTriples : "
-        + ArrayLib.debugTriples(tab, this.schemeTriples));
-    this.mainGraph.getWebapp().log(tab + "TriplesToStore : "
-        + ArrayLib.debugTriples(tab, this.triplesToStore));
-
-    this.mainGraph.getWebapp()
-        .log(tab + "newInstances :      " + ArrayLib.debugList(this.newInstances));
-    this.mainGraph.getWebapp().log(tab + "inputInstances :      "
-        + ArrayLib.debugList(this.inputInstances));
-    this.mainGraph.getWebapp().log(tab + "constantLiterals :      "
-        + ArrayLib.debugList(this.constantLiterals));
-    this.mainGraph.getWebapp().log(tab + "inputLiterals :      "
-        + ArrayLib.debugList(this.inputLiterals));
-    this.mainGraph.getWebapp()
-        .log(tab + "inputClasses :      " + ArrayLib.debugList(this.inputClasses));
-    this.mainGraph.getWebapp().log(tab + "classesToSelect :      "
-        + ArrayLib.debugList(this.classesToSelect));
-    this.mainGraph.getWebapp().log(tab + "typeQueryTriples :      "
-        + ArrayLib.debugTriples(tab, this.typeQueryTriples));
-
-    if (this.dataRetriever != null) {
-      this.mainGraph.getWebapp().log(tab + "DataRetriever Query : \n      "
-          + this.dataRetriever.getQuery());
-    }
+    DebugLib.debug(n, this);
+  }
+  
+  public void debugMulti(int n){
+    DebugLib.debugMulti(n, this);
+  }
+  
+  public void dependencyDebug(){
     
-    if (this.typeRetriever != null) {
-      this.mainGraph.getWebapp().log(tab + "TypeRetriver Query :      "
-          + this.typeRetriever.getQuery() + "\n");
+    this.mainGraph.getWebapp().log(JSON.debug(this.dependencyDescriptor()));
+    for(String key : this.variableDependencies.keySet()){
+      VariableDependency dep = this.variableDependencies.get(key);
+      this.mainGraph.getWebapp().log(dep.queryDebug());
     }
-
-    int k = n + 1;
-    this.mainGraph.getWebapp().log(tab + "Subgraphs :  " + subGraphs.keySet().size());
-    if (subGraphs.keySet().size() > 0) {
-      for (String key : subGraphs.keySet()) {
-        this.mainGraph.getWebapp().log(tab + "Key : " + key);
-        subGraphs.get(key).debug(k);
-      }
+  }
+  
+  public JSONObject dependencyDescriptor(){
+    
+    JSONObject object = JSON.obj();
+    for(String dependencyKey : this.variableDependencies.keySet()){
+      VariableDependency dependency = mainGraph.variableDependencies.get(dependencyKey);
+      JSON.put(object, dependencyKey, JSON.array(dependency.inputs));
     }
+    return object;
   }
   
   void log(String msg){
